@@ -16,26 +16,13 @@ func CreateAccount(db *sqlx.DB, accountName string, accountDesc string) (*Accoun
 		VALUES ($1, $2)
 		RETURNING *`
 
-	tx, err := db.Beginx()
-	if err != nil {
-		return nil, err
-	}
-
-	result := tx.QueryRowx(SQL, accountName, accountDesc)
 	var createdAccount Account
-	err = result.StructScan(&createdAccount)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
 
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	return &createdAccount, Tx(db, func(tx *sqlx.Tx) error {
+		result := tx.QueryRowx(SQL, accountName, accountDesc)
 
-	return &createdAccount, nil
+		return result.StructScan(&createdAccount)
+	})
 }
 
 func GetAccount(db *sqlx.DB, accountID int) (*Account, error) {
@@ -43,25 +30,11 @@ func GetAccount(db *sqlx.DB, accountID int) (*Account, error) {
 		SELECT * FROM account
 		WHERE account.id = $1`
 
-	tx, err := db.Beginx()
-	if err != nil {
-		return nil, err
-	}
-
 	var account Account
-	err = tx.Get(&account, SQL, accountID)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
 
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	return &account, nil
+	return &account, Tx(db, func(tx *sqlx.Tx) error {
+		return tx.Get(&account, SQL, accountID)
+	})
 }
 
 // TODO: pagination
@@ -69,22 +42,9 @@ func GetAccounts(db *sqlx.DB) ([]*Account, error) {
 	SQL := `
 		SELECT * FROM account`
 
-	tx, err := db.Beginx()
-	if err != nil {
-		return nil, err
-	}
-
 	accounts := make([]*Account, 0)
-	if err = tx.Select(&accounts, SQL); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
 
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	return accounts, nil
+	return accounts, Tx(db, func(tx *sqlx.Tx) error {
+		return tx.Select(&accounts, SQL)
+	})
 }
