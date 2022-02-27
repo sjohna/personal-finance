@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
+	"sync/atomic"
 
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
@@ -13,6 +15,30 @@ import (
 
 	_ "github.com/lib/pq"
 )
+
+var requestCounter int64 = 0
+
+func getNextRequestId() int64 {
+	return atomic.AddInt64(&requestCounter, 1)
+}
+
+func LogRequestContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log := logrus.WithFields(logrus.Fields{
+			"request": getNextRequestId(),
+		})
+
+		log.WithFields(logrus.Fields{
+			"route":         r.URL.Path,
+			"method":        r.Method,
+			"contentLength": r.ContentLength,
+		}).Info()
+
+		ctx := context.WithValue(r.Context(), "logger", log)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func configureLogging() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
@@ -54,6 +80,7 @@ func main() {
 	// init chi
 
 	r := chi.NewRouter()
+	r.Use(LogRequestContext)
 	r.Post("/createAccount", service.CreateAccount)
 	r.Get("/account/{accountID}", service.GetAccount)
 	r.Get("/account", service.GetAccounts)

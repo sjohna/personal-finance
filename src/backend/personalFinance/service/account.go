@@ -22,13 +22,13 @@ type createAccountParams struct {
 	AccountDesc string `json:"accountDesc"`
 }
 
-func handlerLogger(handler string) *logrus.Entry {
-	log := logrus.WithField("handler", handler)
+func handlerLogger(r *http.Request, handler string) *logrus.Entry {
+	log := r.Context().Value("logger").(*logrus.Entry).WithField("handler", handler)
 	log.Info("Called")
 	return log
 }
 
-func returnError(log *logrus.Entry, w http.ResponseWriter, err error, httpResponseCode int) {
+func respondError(log *logrus.Entry, w http.ResponseWriter, err error, httpResponseCode int) {
 	log.WithError(err).WithField("httpResponseCode", httpResponseCode).Error()
 	http.Error(w, err.Error(), httpResponseCode)
 }
@@ -38,7 +38,7 @@ func respondJSON(log *logrus.Entry, w http.ResponseWriter, value interface{}) {
 
 	jsonResp, err := json.Marshal(value)
 	if err != nil {
-		returnError(log, w, err, 500)
+		respondError(log, w, err, 500)
 		return
 	}
 
@@ -46,18 +46,17 @@ func respondJSON(log *logrus.Entry, w http.ResponseWriter, value interface{}) {
 	if err != nil {
 		log.Error("Error writing response")
 	} else {
-		log.WithField("bytesWritten", written).Info("Succeeded")
+		log.WithField("responseBytesWritten", written).Info("Succeeded")
 	}
 }
 
 func (service *PFService) CreateAccount(w http.ResponseWriter, r *http.Request) {
-	log := handlerLogger("CreateAccount")
-	defer log.Info("Returned")
+	log := handlerLogger(r, "CreateAccount")
 
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		returnError(log, w, err, 500)
+		respondError(log, w, err, 500)
 		return
 	}
 
@@ -65,13 +64,13 @@ func (service *PFService) CreateAccount(w http.ResponseWriter, r *http.Request) 
 	var params createAccountParams
 	err = json.Unmarshal(body, &params)
 	if err != nil {
-		returnError(log, w, err, 500)
+		respondError(log, w, err, 500)
 		return
 	}
 
 	createdAccount, err := pfdb.CreateAccount(log, service.DB, params.AccountName, params.AccountDesc)
 	if err != nil {
-		returnError(log, w, err, 500)
+		respondError(log, w, err, 500)
 		return
 	}
 
@@ -79,12 +78,11 @@ func (service *PFService) CreateAccount(w http.ResponseWriter, r *http.Request) 
 }
 
 func (service *PFService) GetAccounts(w http.ResponseWriter, r *http.Request) {
-	log := handlerLogger("GetAccounts")
-	defer log.Info("Returned")
+	log := handlerLogger(r, "GetAccounts")
 
 	accounts, err := pfdb.GetAccounts(log, service.DB)
 	if err != nil {
-		returnError(log, w, err, 500)
+		respondError(log, w, err, 500)
 		return
 	}
 
@@ -92,8 +90,7 @@ func (service *PFService) GetAccounts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (service *PFService) GetAccount(w http.ResponseWriter, r *http.Request) {
-	log := handlerLogger("GetAccount")
-	defer log.Info("Returned")
+	log := handlerLogger(r, "GetAccount")
 
 	accountIDString := chi.URLParam(r, "accountID")
 	accountID, err := strconv.Atoi(accountIDString)
@@ -108,8 +105,5 @@ func (service *PFService) GetAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	jsonResp, err := json.Marshal(account)
-	w.Write(jsonResp)
+	respondJSON(log, w, account)
 }
