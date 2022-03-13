@@ -82,9 +82,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(LogRequestContext)
-	r.Post("/createAccount", accountHandler.CreateAccount)
-	r.Get("/account/{accountID}", accountHandler.GetAccount)
-	r.Get("/account", accountHandler.GetAccounts)
+	accountHandler.ConfigureRoutes(r)
 
 	log.Info("Listening on port 3000")
 

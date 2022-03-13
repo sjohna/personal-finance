@@ -10,6 +10,12 @@ import (
 	"github.com/sjohna/personal-finance/utility"
 )
 
+func (handler *AccountHandler) ConfigureRoutes(base *chi.Mux) {
+	base.Post("/account", handler.CreateAccount)
+	base.Get("/account/{accountID}", handler.GetAccount)
+	base.Get("/account", handler.GetAccounts)
+}
+
 type AccountHandler struct {
 	AccountRepo *AccountRepo
 }
