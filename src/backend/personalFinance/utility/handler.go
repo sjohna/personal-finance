@@ -2,6 +2,7 @@ package utility
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -13,9 +14,29 @@ func HandlerLogger(r *http.Request, handler string) *logrus.Entry {
 	return log
 }
 
+func UnmarshalRequestBody(log *logrus.Entry, r *http.Request, value interface{}) error {
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	// Unmarshal
+	err = json.Unmarshal(body, value)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func RespondError(log *logrus.Entry, w http.ResponseWriter, err error, httpResponseCode int) {
 	log.WithError(err).WithField("httpResponseCode", httpResponseCode).Error()
 	http.Error(w, err.Error(), httpResponseCode)
+}
+
+func RespondInternalServerError(log *logrus.Entry, w http.ResponseWriter, err error) {
+	RespondError(log, w, err, 500)
 }
 
 func RespondJSON(log *logrus.Entry, w http.ResponseWriter, value interface{}) {

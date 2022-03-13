@@ -1,8 +1,6 @@
 package account
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -28,24 +26,15 @@ type createAccountParams struct {
 func (handler *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	log := utility.HandlerLogger(r, "CreateAccount")
 
-	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		utility.RespondError(log, w, err, 500)
-		return
-	}
-
-	// Unmarshal
 	var params createAccountParams
-	err = json.Unmarshal(body, &params)
-	if err != nil {
-		utility.RespondError(log, w, err, 500)
+	if err := utility.UnmarshalRequestBody(log, r, &params); err != nil {
+		utility.RespondInternalServerError(log, w, err)
 		return
 	}
 
 	createdAccount, err := handler.AccountRepo.CreateAccount(log, params.AccountName, params.AccountDesc)
 	if err != nil {
-		utility.RespondError(log, w, err, 500)
+		utility.RespondInternalServerError(log, w, err)
 		return
 	}
 
@@ -57,7 +46,7 @@ func (handler *AccountHandler) GetAccounts(w http.ResponseWriter, r *http.Reques
 
 	accounts, err := handler.AccountRepo.GetAccounts(log)
 	if err != nil {
-		utility.RespondError(log, w, err, 500)
+		utility.RespondInternalServerError(log, w, err)
 		return
 	}
 
@@ -68,15 +57,17 @@ func (handler *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request
 	log := utility.HandlerLogger(r, "GetAccount")
 
 	accountIDString := chi.URLParam(r, "accountID")
+	log.WithField("accountID", accountIDString).Info("Params")
+
 	accountID, err := strconv.Atoi(accountIDString)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		utility.RespondInternalServerError(log, w, err)
 		return
 	}
 
 	account, err := handler.AccountRepo.GetAccount(log, accountID)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		utility.RespondInternalServerError(log, w, err)
 		return
 	}
 
