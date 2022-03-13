@@ -9,8 +9,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
+	"github.com/sjohna/personal-finance/account"
 	"github.com/sjohna/personal-finance/pfdb"
-	"github.com/sjohna/personal-finance/service"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	_ "github.com/lib/pq"
@@ -75,15 +75,16 @@ func main() {
 		return
 	}
 
-	service := service.PFService{DB: db}
+	accountRepo := account.AccountRepo{DB: db}
+	accountHandler := account.AccountHandler{AccountRepo: &accountRepo}
 
 	// init chi
 
 	r := chi.NewRouter()
 	r.Use(LogRequestContext)
-	r.Post("/createAccount", service.CreateAccount)
-	r.Get("/account/{accountID}", service.GetAccount)
-	r.Get("/account", service.GetAccounts)
+	r.Post("/createAccount", accountHandler.CreateAccount)
+	r.Get("/account/{accountID}", accountHandler.GetAccount)
+	r.Get("/account", accountHandler.GetAccounts)
 
 	log.Info("Listening on port 3000")
 

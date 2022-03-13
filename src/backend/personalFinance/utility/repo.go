@@ -1,6 +1,15 @@
-package pfdb
+package utility
 
-import "github.com/jmoiron/sqlx"
+import (
+	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
+)
+
+func RepoFunctionLogger(log *logrus.Entry, repoFunction string) *logrus.Entry {
+	log = log.WithField("repoFunction", repoFunction)
+	log.Info("Called")
+	return log
+}
 
 func Tx(db *sqlx.DB, txFunc func(tx *sqlx.Tx) error) error {
 	tx, err := db.Beginx()

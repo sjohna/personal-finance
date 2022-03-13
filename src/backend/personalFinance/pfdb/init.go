@@ -9,14 +9,14 @@ import (
 )
 
 // maybe add type column at some point
-var createAccountTable = `
+var createAccountTable = `--sql
 CREATE TABLE IF NOT EXISTS account (
-    id serial PRIMARY KEY,
+  id serial PRIMARY KEY,
 	account_name VARCHAR,
 	account_desc VARCHAR
 );`
 
-var createCreditTable = `
+var createCreditTable = `--sql
 CREATE TABLE IF NOT EXISTS credit (
 	id serial PRIMARY KEY,
 	creditAmount DECIMAL(20,10),
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS credit (
 	account_id int NOT NULL REFERENCES account
 );`
 
-var createDebitTable = `
+var createDebitTable = `--sql
 CREATE TABLE IF NOT EXISTS debit (
 	id serial PRIMARY KEY,
 	debitAmount DECIMAL(20,10),
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS debit (
 	account_id int NOT NULL REFERENCES account
 );`
 
-var createTransactionTable = `
+var createTransactionTable = `--sql
 CREATE TABLE IF NOT EXISTS transaction (
 	id serial PRIMARY KEY,
 	credit_id int NOT NULL UNIQUE REFERENCES credit,
