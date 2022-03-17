@@ -9,8 +9,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
-	"github.com/sjohna/personal-finance/account"
-	"github.com/sjohna/personal-finance/pfdb"
+	"github.com/sjohna/personal-finance/handler"
+	"github.com/sjohna/personal-finance/repo"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	_ "github.com/lib/pq"
@@ -63,20 +63,20 @@ func main() {
 	log := logrus.WithField("startup", true)
 	log.Info("Starting up")
 
-	db, err := pfdb.Connect("localhost", "pf-test")
+	db, err := repo.Connect("localhost", "pf-test")
 	if err != nil {
 		log.WithError(err).Error()
 		return
 	}
 
-	err = pfdb.CreateTables(db)
+	err = repo.CreateTables(db)
 	if err != nil {
 		log.WithError(err).Error()
 		return
 	}
 
-	accountRepo := account.AccountRepo{DB: db}
-	accountHandler := account.AccountHandler{AccountRepo: &accountRepo}
+	accountRepo := repo.AccountRepo{DB: db}
+	accountHandler := handler.AccountHandler{AccountRepo: &accountRepo}
 
 	// init chi
 

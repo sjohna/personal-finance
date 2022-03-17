@@ -1,4 +1,4 @@
-package utility
+package repo
 
 import (
 	"github.com/jmoiron/sqlx"

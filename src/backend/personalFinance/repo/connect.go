@@ -1,4 +1,4 @@
-package pfdb
+package repo
 
 import (
 	"fmt"

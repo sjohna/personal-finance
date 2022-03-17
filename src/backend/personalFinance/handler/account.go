@@ -1,11 +1,11 @@
-package account
+package handler
 
 import (
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/sjohna/personal-finance/utility"
+	"github.com/sjohna/personal-finance/repo"
 )
 
 func (handler *AccountHandler) ConfigureRoutes(base *chi.Mux) {
@@ -15,7 +15,7 @@ func (handler *AccountHandler) ConfigureRoutes(base *chi.Mux) {
 }
 
 type AccountHandler struct {
-	AccountRepo *AccountRepo
+	AccountRepo *repo.AccountRepo
 }
 
 type createAccountParams struct {
@@ -24,52 +24,52 @@ type createAccountParams struct {
 }
 
 func (handler *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
-	log := utility.HandlerLogger(r, "CreateAccount")
+	log := HandlerLogger(r, "CreateAccount")
 
 	var params createAccountParams
-	if err := utility.UnmarshalRequestBody(log, r, &params); err != nil {
-		utility.RespondInternalServerError(log, w, err)
+	if err := UnmarshalRequestBody(log, r, &params); err != nil {
+		RespondInternalServerError(log, w, err)
 		return
 	}
 
 	createdAccount, err := handler.AccountRepo.CreateAccount(log, params.AccountName, params.AccountDesc)
 	if err != nil {
-		utility.RespondInternalServerError(log, w, err)
+		RespondInternalServerError(log, w, err)
 		return
 	}
 
-	utility.RespondJSON(log, w, createdAccount)
+	RespondJSON(log, w, createdAccount)
 }
 
 func (handler *AccountHandler) GetAccounts(w http.ResponseWriter, r *http.Request) {
-	log := utility.HandlerLogger(r, "GetAccounts")
+	log := HandlerLogger(r, "GetAccounts")
 
 	accounts, err := handler.AccountRepo.GetAccounts(log)
 	if err != nil {
-		utility.RespondInternalServerError(log, w, err)
+		RespondInternalServerError(log, w, err)
 		return
 	}
 
-	utility.RespondJSON(log, w, accounts)
+	RespondJSON(log, w, accounts)
 }
 
 func (handler *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
-	log := utility.HandlerLogger(r, "GetAccount")
+	log := HandlerLogger(r, "GetAccount")
 
 	accountIDString := chi.URLParam(r, "accountID")
 	log.WithField("accountID", accountIDString).Info("Params")
 
 	accountID, err := strconv.Atoi(accountIDString)
 	if err != nil {
-		utility.RespondInternalServerError(log, w, err)
+		RespondInternalServerError(log, w, err)
 		return
 	}
 
 	account, err := handler.AccountRepo.GetAccount(log, accountID)
 	if err != nil {
-		utility.RespondInternalServerError(log, w, err)
+		RespondInternalServerError(log, w, err)
 		return
 	}
 
-	utility.RespondJSON(log, w, account)
+	RespondJSON(log, w, account)
 }

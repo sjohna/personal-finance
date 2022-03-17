@@ -1,9 +1,8 @@
-package account
+package repo
 
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
-	"github.com/sjohna/personal-finance/utility"
 )
 
 type AccountRepo struct {
@@ -17,7 +16,7 @@ type Account struct {
 }
 
 func (repo *AccountRepo) CreateAccount(parentLog *logrus.Entry, accountName string, accountDesc string) (*Account, error) {
-	log := utility.RepoFunctionLogger(parentLog, "CreateAccount")
+	log := RepoFunctionLogger(parentLog, "CreateAccount")
 	defer log.Info("Returned")
 
 	SQL := `--sql
@@ -27,7 +26,7 @@ func (repo *AccountRepo) CreateAccount(parentLog *logrus.Entry, accountName stri
 
 	var createdAccount Account
 
-	return &createdAccount, utility.Tx(repo.DB, func(tx *sqlx.Tx) error {
+	return &createdAccount, Tx(repo.DB, func(tx *sqlx.Tx) error {
 		result := tx.QueryRowx(SQL, accountName, accountDesc)
 
 		return result.StructScan(&createdAccount)
@@ -35,7 +34,7 @@ func (repo *AccountRepo) CreateAccount(parentLog *logrus.Entry, accountName stri
 }
 
 func (repo *AccountRepo) GetAccount(parentLog *logrus.Entry, accountID int) (*Account, error) {
-	log := utility.RepoFunctionLogger(parentLog, "GetAccount")
+	log := RepoFunctionLogger(parentLog, "GetAccount")
 	defer log.Info("Returned")
 
 	SQL := `--sql
@@ -44,14 +43,14 @@ func (repo *AccountRepo) GetAccount(parentLog *logrus.Entry, accountID int) (*Ac
 
 	var account Account
 
-	return &account, utility.Tx(repo.DB, func(tx *sqlx.Tx) error {
+	return &account, Tx(repo.DB, func(tx *sqlx.Tx) error {
 		return tx.Get(&account, SQL, accountID)
 	})
 }
 
 // TODO: pagination
 func (repo *AccountRepo) GetAccounts(parentLog *logrus.Entry) ([]*Account, error) {
-	log := utility.RepoFunctionLogger(parentLog, "GetAccounts")
+	log := RepoFunctionLogger(parentLog, "GetAccounts")
 	defer log.Info("Returned")
 
 	SQL := `--sql
@@ -59,7 +58,7 @@ func (repo *AccountRepo) GetAccounts(parentLog *logrus.Entry) ([]*Account, error
 
 	accounts := make([]*Account, 0)
 
-	return accounts, utility.Tx(repo.DB, func(tx *sqlx.Tx) error {
+	return accounts, Tx(repo.DB, func(tx *sqlx.Tx) error {
 		return tx.Select(&accounts, SQL)
 	})
 }
