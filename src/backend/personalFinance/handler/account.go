@@ -24,52 +24,55 @@ type createAccountParams struct {
 }
 
 func (handler *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
-	log := HandlerLogger(r, "CreateAccount")
+	log := handlerLogger(r, "CreateAccount")
+	defer logHandlerReturn(log)
 
 	var params createAccountParams
-	if err := UnmarshalRequestBody(log, r, &params); err != nil {
-		RespondInternalServerError(log, w, err)
+	if err := unmarshalRequestBody(log, r, &params); err != nil {
+		respondInternalServerError(log, w, err)
 		return
 	}
 
 	createdAccount, err := handler.AccountService.CreateAccount(log, params.AccountName, params.AccountDesc)
 	if err != nil {
-		RespondInternalServerError(log, w, err)
+		respondInternalServerError(log, w, err)
 		return
 	}
 
-	RespondJSON(log, w, createdAccount)
+	respondJSON(log, w, createdAccount)
 }
 
 func (handler *AccountHandler) GetAccounts(w http.ResponseWriter, r *http.Request) {
-	log := HandlerLogger(r, "GetAccounts")
+	log := handlerLogger(r, "GetAccounts")
+	defer logHandlerReturn(log)
 
 	accounts, err := handler.AccountService.GetAccounts(log)
 	if err != nil {
-		RespondInternalServerError(log, w, err)
+		respondInternalServerError(log, w, err)
 		return
 	}
 
-	RespondJSON(log, w, accounts)
+	respondJSON(log, w, accounts)
 }
 
 func (handler *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
-	log := HandlerLogger(r, "GetAccount")
+	log := handlerLogger(r, "GetAccount")
+	defer logHandlerReturn(log)
 
 	accountIDString := chi.URLParam(r, "accountID")
 	log.WithField("accountID", accountIDString).Info("Params")
 
 	accountID, err := strconv.Atoi(accountIDString)
 	if err != nil {
-		RespondInternalServerError(log, w, err)
+		respondInternalServerError(log, w, err)
 		return
 	}
 
 	account, err := handler.AccountService.GetAccount(log, accountID)
 	if err != nil {
-		RespondInternalServerError(log, w, err)
+		respondInternalServerError(log, w, err)
 		return
 	}
 
-	RespondJSON(log, w, account)
+	respondJSON(log, w, account)
 }

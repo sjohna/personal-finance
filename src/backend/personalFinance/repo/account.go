@@ -7,8 +7,8 @@ type Account struct {
 }
 
 func CreateAccount(dao DAO, accountName string, accountDesc string) (*Account, error) {
-	log := RepoFunctionLogger(dao.Logger(), "CreateAccount")
-	defer log.Info("Returned")
+	log := repoFunctionLogger(dao.Logger(), "CreateAccount")
+	defer logRepoReturn(log)
 
 	SQL := `--sql
 		INSERT INTO account (account_name, account_desc)
@@ -16,7 +16,6 @@ func CreateAccount(dao DAO, accountName string, accountDesc string) (*Account, e
 		RETURNING *`
 
 	var createdAccount Account
-
 	err := dao.Get(&createdAccount, SQL, accountName, accountDesc)
 	if err != nil {
 		log.WithError(err).Error()
@@ -26,15 +25,14 @@ func CreateAccount(dao DAO, accountName string, accountDesc string) (*Account, e
 }
 
 func GetAccount(dao DAO, accountID int) (*Account, error) {
-	log := RepoFunctionLogger(dao.Logger(), "GetAccount")
-	defer log.Info("Returned")
+	log := repoFunctionLogger(dao.Logger(), "GetAccount")
+	defer logRepoReturn(log)
 
 	SQL := `--sql
 		SELECT * FROM account
 		WHERE account.id = $1`
 
 	var account Account
-
 	err := dao.Get(&account, SQL, accountID)
 	if err != nil {
 		log.WithError(err).Error()
@@ -45,14 +43,13 @@ func GetAccount(dao DAO, accountID int) (*Account, error) {
 
 // TODO: pagination
 func GetAccounts(dao DAO) ([]*Account, error) {
-	log := RepoFunctionLogger(dao.Logger(), "GetAccounts")
-	defer log.Info("Returned")
+	log := repoFunctionLogger(dao.Logger(), "GetAccounts")
+	defer logRepoReturn(log)
 
 	SQL := `--sql
 		SELECT * FROM account`
 
 	accounts := make([]*Account, 0)
-
 	err := dao.Select(&accounts, SQL)
 	if err != nil {
 		log.WithError(err).Error()

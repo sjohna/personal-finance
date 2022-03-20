@@ -39,9 +39,8 @@ CREATE TABLE IF NOT EXISTS transaction (
 	debit_id int NOT NULL UNIQUE REFERENCES debit
 );`
 
-func createTable(db *sqlx.DB, SQL string, tableName string) error {
+func createTable(db *sqlx.DB, logger *logrus.Entry, SQL string, tableName string) error {
 	log := logrus.WithFields(logrus.Fields{
-		"startup":     true,
 		"createTable": tableName,
 	})
 
@@ -56,21 +55,21 @@ func createTable(db *sqlx.DB, SQL string, tableName string) error {
 	return nil
 }
 
-func CreateTables(db *sqlx.DB) error {
+func CreateTables(db *sqlx.DB, logger *logrus.Entry) error {
 	// TODO: logging
-	if err := createTable(db, createAccountTable, "account"); err != nil {
+	if err := createTable(db, logger, createAccountTable, "account"); err != nil {
 		return err
 	}
 
-	if err := createTable(db, createCreditTable, "credit"); err != nil {
+	if err := createTable(db, logger, createCreditTable, "credit"); err != nil {
 		return err
 	}
 
-	if err := createTable(db, createDebitTable, "debit"); err != nil {
+	if err := createTable(db, logger, createDebitTable, "debit"); err != nil {
 		return err
 	}
 
-	if err := createTable(db, createTransactionTable, "transaction"); err != nil {
+	if err := createTable(db, logger, createTransactionTable, "transaction"); err != nil {
 		return err
 	}
 

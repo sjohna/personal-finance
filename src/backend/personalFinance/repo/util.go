@@ -5,10 +5,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func RepoFunctionLogger(log *logrus.Entry, repoFunction string) *logrus.Entry {
+func repoFunctionLogger(log *logrus.Entry, repoFunction string) *logrus.Entry {
 	log = log.WithField("repo-function", repoFunction)
-	log.Info("Called")
+	log.Info("Repo called")
 	return log
+}
+
+func logRepoReturn(log *logrus.Entry) {
+	log.Info("Repo returned")
 }
 
 func Tx(db *sqlx.DB, txFunc func(tx *sqlx.Tx) error) error {

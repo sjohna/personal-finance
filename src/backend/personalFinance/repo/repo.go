@@ -10,8 +10,5 @@ type Repo struct {
 }
 
 func (repo *Repo) NonTx(logger *logrus.Entry) *DBDAO {
-	return &DBDAO{
-		repo.DB,
-		logger,
-	}
+	return newDBDAO(repo.DB, logger)
 }

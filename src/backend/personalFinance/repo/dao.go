@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"sync/atomic"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
@@ -39,7 +40,13 @@ type TxDAO struct {
 	err    error
 }
 
-func NewDBDAO(db *sqlx.DB, logger *logrus.Entry) *DBDAO {
+var daoIdCounter int64 = 0
+
+func getNextDaoId() int64 {
+	return atomic.AddInt64(&daoIdCounter, 1)
+}
+
+func newDBDAO(db *sqlx.DB, logger *logrus.Entry) *DBDAO {
 	if db == nil {
 		logger.Fatal("db parameter not provided to NewDBDAO!")
 	}
@@ -48,12 +55,15 @@ func NewDBDAO(db *sqlx.DB, logger *logrus.Entry) *DBDAO {
 		logger.Fatal("logger parameter not provided to NewDBDAO!")
 	}
 
-	// TODO: get sequence number here and add field(s) to logger
-	//log := logger.WithField("repo-dao")
+	log := logger.WithFields(logrus.Fields{
+		"repo-daoId": getNextDaoId(),
+	})
+
+	log.WithField("repo-dao-type", "non-tx").Info("DAO created")
 
 	return &DBDAO{
 		db,
-		logger,
+		log,
 	}
 }
 
@@ -125,7 +135,7 @@ func (dao *DBDAO) Unsafe() DAO {
 }
 
 func (dao *DBDAO) Close() error {
-	dao.logger.Info("Close")
+	dao.logger.Info("DAO closed")
 	return nil
 }
 
@@ -267,9 +277,10 @@ func (dao *TxDAO) Close() error {
 		dao.logger.Warn("Rolling back transaction")
 		rollbackErr := dao.sqlxer.Rollback()
 		if rollbackErr != nil {
-			dao.logger.WithError(rollbackErr).Error("Error rolling back transaction!")
+			dao.logger.WithError(rollbackErr).Error("Tx DAO error rolling back transaction!")
+		} else {
+			dao.logger.Info("Tx DAO rolled back")
 		}
-		dao.logger.Info("Rolled back")
 
 		return dao.err
 	}
@@ -277,10 +288,10 @@ func (dao *TxDAO) Close() error {
 	if dao.err == nil {
 		commitErr := dao.sqlxer.Commit()
 		if commitErr != nil {
-			dao.logger.WithError(commitErr).Error("Error committing transaction!")
+			dao.logger.WithError(commitErr).Error("Tx DAO error committing transaction!")
 			return commitErr
 		}
-		dao.logger.Info("Committed")
+		dao.logger.Info("Tx DAO committed")
 	}
 
 	return nil

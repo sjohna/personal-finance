@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"os"
-	"sync/atomic"
 
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
@@ -16,30 +14,6 @@ import (
 
 	_ "github.com/lib/pq"
 )
-
-var requestCounter int64 = 0
-
-func getNextRequestId() int64 {
-	return atomic.AddInt64(&requestCounter, 1)
-}
-
-func LogRequestContext(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log := logrus.WithFields(logrus.Fields{
-			"request": getNextRequestId(),
-		})
-
-		log.WithFields(logrus.Fields{
-			"route":         r.URL.Path,
-			"method":        r.Method,
-			"contentLength": r.ContentLength,
-		}).Info()
-
-		ctx := context.WithValue(r.Context(), "logger", log)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
 
 func configureLogging() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
@@ -70,7 +44,7 @@ func main() {
 		return
 	}
 
-	err = repo.CreateTables(db)
+	err = repo.CreateTables(db, log)
 	if err != nil {
 		log.WithError(err).Error()
 		return
@@ -83,12 +57,12 @@ func main() {
 	// init chi
 
 	r := chi.NewRouter()
-	r.Use(LogRequestContext)
+	r.Use(handler.LogRequestContext)
 	accountHandler.ConfigureRoutes(r)
 
 	log.Info("Listening on port 3000")
 
 	http.ListenAndServe(":3000", r)
 
-	logrus.Info("Done")
+	log.Info("Done")
 }

@@ -10,8 +10,8 @@ type AccountService struct {
 }
 
 func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName string, accountDesc string) (*repo.Account, error) {
-	log := ServiceFunctionLogger(logger, "CreateAccount")
-	defer log.Info("Returned")
+	log := serviceFunctionLogger(logger, "CreateAccount")
+	defer logServiceReturn(log)
 
 	dao := svc.Repo.NonTx(log)
 	defer dao.Close()
@@ -24,8 +24,8 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName strin
 }
 
 func (svc *AccountService) GetAccount(logger *logrus.Entry, accountID int) (*repo.Account, error) {
-	log := ServiceFunctionLogger(logger, "GetAccount")
-	defer log.Info("Returned")
+	log := serviceFunctionLogger(logger, "GetAccount")
+	defer logServiceReturn(log)
 
 	dao := svc.Repo.NonTx(log)
 	defer dao.Close()
@@ -39,8 +39,8 @@ func (svc *AccountService) GetAccount(logger *logrus.Entry, accountID int) (*rep
 
 // TODO: pagination
 func (svc *AccountService) GetAccounts(logger *logrus.Entry) ([]*repo.Account, error) {
-	log := ServiceFunctionLogger(logger, "GetAccounts")
-	defer log.Info("Returned")
+	log := serviceFunctionLogger(logger, "GetAccounts")
+	defer logServiceReturn(log)
 
 	dao := svc.Repo.NonTx(log)
 	defer dao.Close()
