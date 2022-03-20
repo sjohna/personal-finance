@@ -11,6 +11,8 @@ import (
 type DAO interface {
 	Logger() *logrus.Entry
 
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	Get(dest interface{}, query string, args ...interface{}) error
 	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
 	NamedExec(query string, arg interface{}) (sql.Result, error)
@@ -37,16 +39,42 @@ type TxDAO struct {
 	err    error
 }
 
+func NewDBDAO(db *sqlx.DB, logger *logrus.Entry) *DBDAO {
+	if db == nil {
+		logger.Fatal("db parameter not provided to NewDBDAO!")
+	}
+
+	if logger == nil {
+		logger.Fatal("logger parameter not provided to NewDBDAO!")
+	}
+
+	// TODO: get sequence number here and add field(s) to logger
+	//log := logger.WithField("repo-dao")
+
+	return &DBDAO{
+		db,
+		logger,
+	}
+}
+
 func (dao *DBDAO) Logger() *logrus.Entry {
 	return dao.logger
 }
 
+func (dao *DBDAO) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return dao.sqlxer.Exec(query, args...)
+}
+
+func (dao *DBDAO) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return dao.sqlxer.ExecContext(ctx, query, args...)
+}
+
 func (dao *DBDAO) Get(dest interface{}, query string, args ...interface{}) error {
-	return dao.sqlxer.Get(dest, query, args)
+	return dao.sqlxer.Get(dest, query, args...)
 }
 
 func (dao *DBDAO) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	return dao.sqlxer.GetContext(ctx, dest, query, args)
+	return dao.sqlxer.GetContext(ctx, dest, query, args...)
 }
 
 func (dao *DBDAO) NamedExec(query string, arg interface{}) (sql.Result, error) {
@@ -82,11 +110,11 @@ func (dao *DBDAO) Rebind(query string) string {
 }
 
 func (dao *DBDAO) Select(dest interface{}, query string, args ...interface{}) error {
-	return dao.sqlxer.Select(dest, query, args)
+	return dao.sqlxer.Select(dest, query, args...)
 }
 
 func (dao *DBDAO) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	return dao.sqlxer.SelectContext(ctx, dest, query, args)
+	return dao.sqlxer.SelectContext(ctx, dest, query, args...)
 }
 
 func (dao *DBDAO) Unsafe() DAO {
@@ -96,12 +124,35 @@ func (dao *DBDAO) Unsafe() DAO {
 	}
 }
 
+func (dao *DBDAO) Close() error {
+	dao.logger.Info("Close")
+	return nil
+}
+
 func (dao *TxDAO) Logger() *logrus.Entry {
 	return dao.logger
 }
 
+func (dao *TxDAO) Exec(query string, args ...interface{}) (sql.Result, error) {
+	result, err := dao.sqlxer.Exec(query, args...)
+	if err != nil {
+		dao.err = err
+	}
+
+	return result, err
+}
+
+func (dao *TxDAO) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	result, err := dao.sqlxer.ExecContext(ctx, query, args...)
+	if err != nil {
+		dao.err = err
+	}
+
+	return result, err
+}
+
 func (dao *TxDAO) Get(dest interface{}, query string, args ...interface{}) error {
-	err := dao.sqlxer.Get(dest, query, args)
+	err := dao.sqlxer.Get(dest, query, args...)
 	if err != nil {
 		dao.err = err
 	}
@@ -110,7 +161,7 @@ func (dao *TxDAO) Get(dest interface{}, query string, args ...interface{}) error
 }
 
 func (dao *TxDAO) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	err := dao.sqlxer.GetContext(ctx, dest, query, args)
+	err := dao.sqlxer.GetContext(ctx, dest, query, args...)
 	if err != nil {
 		dao.err = err
 	}
@@ -186,7 +237,7 @@ func (dao *TxDAO) Rebind(query string) string {
 }
 
 func (dao *TxDAO) Select(dest interface{}, query string, args ...interface{}) error {
-	err := dao.sqlxer.Select(dest, query, args)
+	err := dao.sqlxer.Select(dest, query, args...)
 	if err != nil {
 		dao.err = err
 	}
@@ -195,7 +246,7 @@ func (dao *TxDAO) Select(dest interface{}, query string, args ...interface{}) er
 }
 
 func (dao *TxDAO) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	err := dao.sqlxer.SelectContext(ctx, dest, query, args)
+	err := dao.sqlxer.SelectContext(ctx, dest, query, args...)
 	if err != nil {
 		dao.err = err
 	}
@@ -211,13 +262,14 @@ func (dao *TxDAO) Unsafe() DAO {
 	}
 }
 
-func (dao *TxDAO) CloseTransaction() error {
+func (dao *TxDAO) Close() error {
 	if dao.err != nil {
 		dao.logger.Warn("Rolling back transaction")
 		rollbackErr := dao.sqlxer.Rollback()
 		if rollbackErr != nil {
 			dao.logger.WithError(rollbackErr).Error("Error rolling back transaction!")
 		}
+		dao.logger.Info("Rolled back")
 
 		return dao.err
 	}
@@ -228,6 +280,7 @@ func (dao *TxDAO) CloseTransaction() error {
 			dao.logger.WithError(commitErr).Error("Error committing transaction!")
 			return commitErr
 		}
+		dao.logger.Info("Committed")
 	}
 
 	return nil

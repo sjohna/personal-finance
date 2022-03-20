@@ -1,22 +1,13 @@
 package repo
 
-import (
-	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
-)
-
-type AccountRepo struct {
-	DB *sqlx.DB
-}
-
 type Account struct {
 	Id          int    `db:"id" json:"id"`
 	AccountName string `db:"account_name" json:"accountName"`
 	AccountDesc string `db:"account_desc" json:"accountDesc"`
 }
 
-func (repo *AccountRepo) CreateAccount(parentLog *logrus.Entry, accountName string, accountDesc string) (*Account, error) {
-	log := RepoFunctionLogger(parentLog, "CreateAccount")
+func CreateAccount(dao DAO, accountName string, accountDesc string) (*Account, error) {
+	log := RepoFunctionLogger(dao.Logger(), "CreateAccount")
 	defer log.Info("Returned")
 
 	SQL := `--sql
@@ -26,15 +17,16 @@ func (repo *AccountRepo) CreateAccount(parentLog *logrus.Entry, accountName stri
 
 	var createdAccount Account
 
-	return &createdAccount, Tx(repo.DB, func(tx *sqlx.Tx) error {
-		result := tx.QueryRowx(SQL, accountName, accountDesc)
+	err := dao.Get(&createdAccount, SQL, accountName, accountDesc)
+	if err != nil {
+		log.WithError(err).Error()
+	}
 
-		return result.StructScan(&createdAccount)
-	})
+	return &createdAccount, err
 }
 
-func (repo *AccountRepo) GetAccount(parentLog *logrus.Entry, accountID int) (*Account, error) {
-	log := RepoFunctionLogger(parentLog, "GetAccount")
+func GetAccount(dao DAO, accountID int) (*Account, error) {
+	log := RepoFunctionLogger(dao.Logger(), "GetAccount")
 	defer log.Info("Returned")
 
 	SQL := `--sql
@@ -43,14 +35,17 @@ func (repo *AccountRepo) GetAccount(parentLog *logrus.Entry, accountID int) (*Ac
 
 	var account Account
 
-	return &account, Tx(repo.DB, func(tx *sqlx.Tx) error {
-		return tx.Get(&account, SQL, accountID)
-	})
+	err := dao.Get(&account, SQL, accountID)
+	if err != nil {
+		log.WithError(err).Error()
+	}
+
+	return &account, err
 }
 
 // TODO: pagination
-func (repo *AccountRepo) GetAccounts(parentLog *logrus.Entry) ([]*Account, error) {
-	log := RepoFunctionLogger(parentLog, "GetAccounts")
+func GetAccounts(dao DAO) ([]*Account, error) {
+	log := RepoFunctionLogger(dao.Logger(), "GetAccounts")
 	defer log.Info("Returned")
 
 	SQL := `--sql
@@ -58,7 +53,10 @@ func (repo *AccountRepo) GetAccounts(parentLog *logrus.Entry) ([]*Account, error
 
 	accounts := make([]*Account, 0)
 
-	return accounts, Tx(repo.DB, func(tx *sqlx.Tx) error {
-		return tx.Select(&accounts, SQL)
-	})
+	err := dao.Select(&accounts, SQL)
+	if err != nil {
+		log.WithError(err).Error()
+	}
+
+	return accounts, err
 }

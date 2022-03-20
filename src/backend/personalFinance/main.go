@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/sjohna/personal-finance/handler"
 	"github.com/sjohna/personal-finance/repo"
+	"github.com/sjohna/personal-finance/service"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	_ "github.com/lib/pq"
@@ -75,8 +76,9 @@ func main() {
 		return
 	}
 
-	accountRepo := repo.AccountRepo{DB: db}
-	accountHandler := handler.AccountHandler{AccountRepo: &accountRepo}
+	repo := repo.Repo{DB: db}
+	accountService := service.AccountService{Repo: &repo}
+	accountHandler := handler.AccountHandler{AccountService: &accountService}
 
 	// init chi
 

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/sjohna/personal-finance/repo"
+	"github.com/sjohna/personal-finance/service"
 )
 
 func (handler *AccountHandler) ConfigureRoutes(base *chi.Mux) {
@@ -15,7 +15,7 @@ func (handler *AccountHandler) ConfigureRoutes(base *chi.Mux) {
 }
 
 type AccountHandler struct {
-	AccountRepo *repo.AccountRepo
+	AccountService *service.AccountService
 }
 
 type createAccountParams struct {
@@ -32,7 +32,7 @@ func (handler *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	createdAccount, err := handler.AccountRepo.CreateAccount(log, params.AccountName, params.AccountDesc)
+	createdAccount, err := handler.AccountService.CreateAccount(log, params.AccountName, params.AccountDesc)
 	if err != nil {
 		RespondInternalServerError(log, w, err)
 		return
@@ -44,7 +44,7 @@ func (handler *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Requ
 func (handler *AccountHandler) GetAccounts(w http.ResponseWriter, r *http.Request) {
 	log := HandlerLogger(r, "GetAccounts")
 
-	accounts, err := handler.AccountRepo.GetAccounts(log)
+	accounts, err := handler.AccountService.GetAccounts(log)
 	if err != nil {
 		RespondInternalServerError(log, w, err)
 		return
@@ -65,7 +65,7 @@ func (handler *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	account, err := handler.AccountRepo.GetAccount(log, accountID)
+	account, err := handler.AccountService.GetAccount(log, accountID)
 	if err != nil {
 		RespondInternalServerError(log, w, err)
 		return

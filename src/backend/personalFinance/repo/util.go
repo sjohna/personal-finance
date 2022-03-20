@@ -6,7 +6,7 @@ import (
 )
 
 func RepoFunctionLogger(log *logrus.Entry, repoFunction string) *logrus.Entry {
-	log = log.WithField("repoFunction", repoFunction)
+	log = log.WithField("repo-function", repoFunction)
 	log.Info("Called")
 	return log
 }
