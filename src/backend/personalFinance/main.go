@@ -38,13 +38,7 @@ func main() {
 	log := logrus.WithField("startup", true)
 	log.Info("Starting up")
 
-	db, err := repo.Connect("localhost", "pf-test")
-	if err != nil {
-		log.WithError(err).Error()
-		return
-	}
-
-	err = repo.CreateTables(db, log)
+	db, err := repo.Connect("localhost", "pf-dev")
 	if err != nil {
 		log.WithError(err).Error()
 		return
