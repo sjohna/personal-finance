@@ -56,7 +56,7 @@ func newDBDAO(db *sqlx.DB, logger *logrus.Entry) *DBDAO {
 	}
 
 	log := logger.WithFields(logrus.Fields{
-		"repo-daoId": getNextDaoId(),
+		"repo-dao-id": getNextDaoId(),
 	})
 
 	log.WithField("repo-dao-type", "non-tx").Info("DAO created")
@@ -137,6 +137,34 @@ func (dao *DBDAO) Unsafe() DAO {
 func (dao *DBDAO) Close() error {
 	dao.logger.Info("DAO closed")
 	return nil
+}
+
+func newTXDAO(db *sqlx.DB, logger *logrus.Entry) (*TxDAO, error) {
+	if db == nil {
+		logger.Fatal("db parameter not provided to NewTXDAO!")
+	}
+
+	if logger == nil {
+		logger.Fatal("logger parameter not provided to NewTXDAO!")
+	}
+
+	log := logger.WithFields(logrus.Fields{
+		"repo-dao-id": getNextDaoId(),
+	})
+
+	tx, err := db.Beginx()
+	if err != nil {
+		log.WithField("repo-dao-type", "tx").WithError(err).Error("Error beginning transaction")
+		return nil, err
+	}
+
+	log.WithField("repo-dao-type", "tx").Info("DAO created")
+
+	return &TxDAO{
+		tx,
+		log,
+		nil,
+	}, nil
 }
 
 func (dao *TxDAO) Logger() *logrus.Entry {

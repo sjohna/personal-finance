@@ -62,7 +62,7 @@ func (handler *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request
 	accountIDString := chi.URLParam(r, "accountID")
 	log.WithField("accountID", accountIDString).Info("Params")
 
-	accountID, err := strconv.Atoi(accountIDString)
+	accountID, err := strconv.ParseInt(accountIDString, 10, 64)
 	if err != nil {
 		respondInternalServerError(log, w, err)
 		return

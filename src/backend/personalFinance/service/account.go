@@ -13,17 +13,48 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName strin
 	log := serviceFunctionLogger(logger, "CreateAccount")
 	defer logServiceReturn(log)
 
-	dao := svc.Repo.NonTx(log)
-	defer dao.Close()
-	account, err := repo.CreateAccount(dao, accountName, accountDesc)
+	// todo: refactor to make the tx be in a single function...
+	tx, err := svc.Repo.SerializableTx(log)
 	if err != nil {
-		log.WithError(err).Error()
+		log.WithError(err).Error("Error creating DAO")
+		return nil, err
+	}
+	defer tx.Close()
+
+	action_id, err := repo.CreateAction(tx, "api-call")
+	if err != nil {
+		log.WithError(err).Error("Error creating action")
+		return nil, err
 	}
 
-	return account, err
+	id, err := repo.GetNextEntityId(tx)
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, err
+	}
+
+	params := repo.CreateAccountParams{
+		id,
+		accountName,
+		accountDesc,
+	}
+
+	err = repo.CreateEvent(tx, action_id, "create", "account", params)
+	if err != nil {
+		log.WithError(err).Error("Error creating event")
+		return nil, err
+	}
+
+	account, err := repo.CreateAccount(tx, params)
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, err
+	}
+
+	return account, nil
 }
 
-func (svc *AccountService) GetAccount(logger *logrus.Entry, accountID int) (*repo.Account, error) {
+func (svc *AccountService) GetAccount(logger *logrus.Entry, accountID int64) (*repo.Account, error) {
 	log := serviceFunctionLogger(logger, "GetAccount")
 	defer logServiceReturn(log)
 

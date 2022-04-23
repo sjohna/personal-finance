@@ -1,22 +1,28 @@
 package repo
 
 type Account struct {
-	Id          int    `db:"id" json:"id"`
+	Id          int64  `db:"id" json:"id"`
 	AccountName string `db:"account_name" json:"accountName"`
 	AccountDesc string `db:"account_desc" json:"accountDesc"`
 }
 
-func CreateAccount(dao DAO, accountName string, accountDesc string) (*Account, error) {
+type CreateAccountParams struct {
+	Id          int64  `json:"id"`
+	AccountName string `json:"accountName"`
+	AccountDesc string `json:"accountDesc"`
+}
+
+func CreateAccount(dao DAO, params CreateAccountParams) (*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateAccount")
 	defer logRepoReturn(log)
 
 	SQL := `--sql
-		INSERT INTO account (account_name, account_desc)
-		VALUES ($1, $2)
+		INSERT INTO account (id, account_name, account_desc)
+		VALUES ($1, $2, $3)
 		RETURNING *`
 
 	var createdAccount Account
-	err := dao.Get(&createdAccount, SQL, accountName, accountDesc)
+	err := dao.Get(&createdAccount, SQL, params.Id, params.AccountName, params.AccountDesc)
 	if err != nil {
 		log.WithError(err).Error()
 	}
@@ -24,7 +30,7 @@ func CreateAccount(dao DAO, accountName string, accountDesc string) (*Account, e
 	return &createdAccount, err
 }
 
-func GetAccount(dao DAO, accountID int) (*Account, error) {
+func GetAccount(dao DAO, accountID int64) (*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "GetAccount")
 	defer logRepoReturn(log)
 
