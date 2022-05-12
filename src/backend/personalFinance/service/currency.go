@@ -17,11 +17,6 @@ func (svc *CurrencyService) CreateCurrency(logger *logrus.Entry, name string, ab
 
 	err := svc.Repo.SerializableTx(log, func(tx *repo.TxDAO) error {
 		txLog := tx.Logger()
-		action_id, err := repo.CreateAction(tx, "api-call")
-		if err != nil {
-			txLog.WithError(err).Error("Error creating action")
-			return err
-		}
 
 		id, err := repo.GetNextEntityId(tx)
 		if err != nil {
@@ -36,9 +31,7 @@ func (svc *CurrencyService) CreateCurrency(logger *logrus.Entry, name string, ab
 			magnitude,
 		}
 
-		err = repo.CreateEvent(tx, action_id, "create", "currency", params)
-		if err != nil {
-			txLog.WithError(err).Error("Error creating event")
+		if err = repo.HandleCreateSingleEntityFromApiCall(tx, "create", "currency", params); err != nil {
 			return err
 		}
 

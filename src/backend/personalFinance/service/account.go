@@ -9,7 +9,7 @@ type AccountService struct {
 	Repo *repo.Repo
 }
 
-func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName string, accountDesc string) (*repo.Account, error) {
+func (svc *AccountService) CreateAccount(logger *logrus.Entry, name string, description string) (*repo.Account, error) {
 	log := serviceFunctionLogger(logger, "CreateAccount")
 	defer logServiceReturn(log)
 
@@ -17,11 +17,6 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName strin
 
 	err := svc.Repo.SerializableTx(log, func(tx *repo.TxDAO) error {
 		txLog := tx.Logger()
-		action_id, err := repo.CreateAction(tx, "api-call")
-		if err != nil {
-			txLog.WithError(err).Error("Error creating action")
-			return err
-		}
 
 		id, err := repo.GetNextEntityId(tx)
 		if err != nil {
@@ -31,13 +26,11 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName strin
 
 		params := repo.CreateAccountParams{
 			id,
-			accountName,
-			accountDesc,
+			name,
+			description,
 		}
 
-		err = repo.CreateEvent(tx, action_id, "create", "account", params)
-		if err != nil {
-			txLog.WithError(err).Error("Error creating event")
+		if err = repo.HandleCreateSingleEntityFromApiCall(tx, "create", "account", params); err != nil {
 			return err
 		}
 

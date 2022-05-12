@@ -45,7 +45,6 @@ func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, p
 	bytes, err := json.Marshal(params)
 	if err != nil {
 		log.WithError(err).Error("Failed to marshal params to JSON")
-		// todo: need to make TX a function, because this error will not be registered on the tx
 		return err
 	}
 
@@ -59,6 +58,24 @@ func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, p
 	_, err = dao.Exec(SQL, eventType, entityType, jsonString, actionId)
 	if err != nil {
 		log.WithError(err).Error()
+		return err
+	}
+
+	return nil
+}
+
+func HandleCreateSingleEntityFromApiCall(dao DAO, eventType string, entityType string, params interface{}) error {
+	log := dao.Logger()
+
+	action_id, err := CreateAction(dao, "api-call")
+	if err != nil {
+		log.WithError(err).Error("Error creating action")
+		return err
+	}
+
+	err = CreateEvent(dao, action_id, eventType, entityType, params)
+	if err != nil {
+		log.WithError(err).Error("Error creating event")
 		return err
 	}
 
