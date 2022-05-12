@@ -16,6 +16,7 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName strin
 	var account *repo.Account
 
 	err := svc.Repo.SerializableTx(log, func(tx *repo.TxDAO) error {
+		log := tx.Logger()
 		action_id, err := repo.CreateAction(tx, "api-call")
 		if err != nil {
 			log.WithError(err).Error("Error creating action")
