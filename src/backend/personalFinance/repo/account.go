@@ -2,8 +2,8 @@ package repo
 
 type Account struct {
 	Id          int64  `db:"id" json:"id"`
-	AccountName string `db:"account_name" json:"accountName"`
-	AccountDesc string `db:"account_desc" json:"accountDesc"`
+	AccountName string `db:"name" json:"accountName"`
+	AccountDesc string `db:"description" json:"accountDesc"`
 }
 
 type CreateAccountParams struct {
@@ -17,7 +17,7 @@ func CreateAccount(dao DAO, params CreateAccountParams) (*Account, error) {
 	defer logRepoReturn(log)
 
 	SQL := `--sql
-		INSERT INTO account (id, account_name, account_desc)
+		INSERT INTO account (id, name, description)
 		VALUES ($1, $2, $3)
 		RETURNING *`
 

@@ -24,7 +24,7 @@ func CreateAction(dao DAO, actionOrigin string) (int64, error) {
 	defer logRepoReturn(log)
 
 	SQL := `--sql
-		insert into action(action_origin)
+		insert into action(origin)
 		values($1)
 		returning id;`
 
