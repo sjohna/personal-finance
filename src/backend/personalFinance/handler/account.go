@@ -18,22 +18,21 @@ type AccountHandler struct {
 	Service *service.AccountService
 }
 
-type createAccountParams struct {
-	AccountName string `json:"accountName"`
-	AccountDesc string `json:"accountDesc"`
-}
-
 func (handler *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	log := handlerLogger(r, "CreateAccount")
 	defer logHandlerReturn(log)
 
-	var params createAccountParams
+	var params struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+
 	if err := unmarshalRequestBody(log, r, &params); err != nil {
 		respondInternalServerError(log, w, err)
 		return
 	}
 
-	createdAccount, err := handler.Service.CreateAccount(log, params.AccountName, params.AccountDesc)
+	createdAccount, err := handler.Service.CreateAccount(log, params.Name, params.Description)
 	if err != nil {
 		respondInternalServerError(log, w, err)
 		return

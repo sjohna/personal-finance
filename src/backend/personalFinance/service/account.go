@@ -16,16 +16,16 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName strin
 	var account *repo.Account
 
 	err := svc.Repo.SerializableTx(log, func(tx *repo.TxDAO) error {
-		log := tx.Logger()
+		txLog := tx.Logger()
 		action_id, err := repo.CreateAction(tx, "api-call")
 		if err != nil {
-			log.WithError(err).Error("Error creating action")
+			txLog.WithError(err).Error("Error creating action")
 			return err
 		}
 
 		id, err := repo.GetNextEntityId(tx)
 		if err != nil {
-			log.WithError(err).Error()
+			txLog.WithError(err).Error()
 			return err
 		}
 
@@ -37,13 +37,13 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, accountName strin
 
 		err = repo.CreateEvent(tx, action_id, "create", "account", params)
 		if err != nil {
-			log.WithError(err).Error("Error creating event")
+			txLog.WithError(err).Error("Error creating event")
 			return err
 		}
 
 		account, err = repo.CreateAccount(tx, params)
 		if err != nil {
-			log.WithError(err).Error()
+			txLog.WithError(err).Error()
 			return err
 		}
 

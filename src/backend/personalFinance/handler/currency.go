@@ -16,17 +16,16 @@ func (handler *CurrencyHandler) ConfigureRoutes(base *chi.Mux) {
 
 }
 
-type createCurrencyParams struct {
-	Name         string `json:"name"`
-	Abbreviation string `json:"abbreviation"`
-	Magnitude    int    `json:"magnitude"`
-}
-
 func (handler *CurrencyHandler) CreateCurrency(w http.ResponseWriter, r *http.Request) {
 	log := handlerLogger(r, "CreateCurrency")
 	defer logHandlerReturn(log)
 
-	var params createCurrencyParams
+	var params struct {
+		Name         string `json:"name"`
+		Abbreviation string `json:"abbreviation"`
+		Magnitude    int    `json:"magnitude"`
+	}
+
 	if err := unmarshalRequestBody(log, r, &params); err != nil {
 		respondInternalServerError(log, w, err)
 		return

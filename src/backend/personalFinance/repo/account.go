@@ -2,14 +2,14 @@ package repo
 
 type Account struct {
 	Id          int64  `db:"id" json:"id"`
-	AccountName string `db:"name" json:"accountName"`
-	AccountDesc string `db:"description" json:"accountDesc"`
+	Name        string `db:"name" json:"name"`
+	Description string `db:"description" json:"description"`
 }
 
 type CreateAccountParams struct {
 	Id          int64  `json:"id"`
-	AccountName string `json:"accountName"`
-	AccountDesc string `json:"accountDesc"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func CreateAccount(dao DAO, params CreateAccountParams) (*Account, error) {
@@ -22,7 +22,7 @@ func CreateAccount(dao DAO, params CreateAccountParams) (*Account, error) {
 		RETURNING *`
 
 	var createdAccount Account
-	err := dao.Get(&createdAccount, SQL, params.Id, params.AccountName, params.AccountDesc)
+	err := dao.Get(&createdAccount, SQL, params.Id, params.Name, params.Description)
 	if err != nil {
 		log.WithError(err).Error()
 	}
