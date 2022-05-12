@@ -46,13 +46,16 @@ func main() {
 
 	repo := repo.Repo{DB: db}
 	accountService := service.AccountService{Repo: &repo}
-	accountHandler := handler.AccountHandler{AccountService: &accountService}
+	accountHandler := handler.AccountHandler{Service: &accountService}
+	currencyService := service.CurrencyService{Repo: &repo}
+	currencyHandler := handler.CurrencyHandler{Service: &currencyService}
 
 	// init chi
 
 	r := chi.NewRouter()
 	r.Use(handler.LogRequestContext)
 	accountHandler.ConfigureRoutes(r)
+	currencyHandler.ConfigureRoutes(r)
 
 	log.Info("Listening on port 3000")
 

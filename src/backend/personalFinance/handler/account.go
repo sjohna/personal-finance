@@ -15,7 +15,7 @@ func (handler *AccountHandler) ConfigureRoutes(base *chi.Mux) {
 }
 
 type AccountHandler struct {
-	AccountService *service.AccountService
+	Service *service.AccountService
 }
 
 type createAccountParams struct {
@@ -33,7 +33,7 @@ func (handler *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	createdAccount, err := handler.AccountService.CreateAccount(log, params.AccountName, params.AccountDesc)
+	createdAccount, err := handler.Service.CreateAccount(log, params.AccountName, params.AccountDesc)
 	if err != nil {
 		respondInternalServerError(log, w, err)
 		return
@@ -46,7 +46,7 @@ func (handler *AccountHandler) GetAccounts(w http.ResponseWriter, r *http.Reques
 	log := handlerLogger(r, "GetAccounts")
 	defer logHandlerReturn(log)
 
-	accounts, err := handler.AccountService.GetAccounts(log)
+	accounts, err := handler.Service.GetAccounts(log)
 	if err != nil {
 		respondInternalServerError(log, w, err)
 		return
@@ -68,7 +68,7 @@ func (handler *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	account, err := handler.AccountService.GetAccount(log, accountID)
+	account, err := handler.Service.GetAccount(log, accountID)
 	if err != nil {
 		respondInternalServerError(log, w, err)
 		return
