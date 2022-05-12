@@ -12,16 +12,17 @@ create type entity_type as enum('account');
 create type action_origin as enum('api-call');
 
 create table action (
-  id serial primary key,
+  id bigint generated always as identity primary key,
   time timestamptz not null default now(),
 	origin action_origin not null,
 	notes text
 );
 
 create table event (
-	id serial primary key,
+	id bigint generated always as identity primary key,
 	event_type event_type not null,
 	entity_type entity_type not null,
+	entity_id bigint not null,
 	parameters json not null,
   action_id int references action not null
 );
@@ -45,3 +46,4 @@ begin
 	return next_id;
 end;
 $next_id$ language plpgsql;
+

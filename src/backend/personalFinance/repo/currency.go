@@ -8,13 +8,12 @@ type Currency struct {
 }
 
 type CreateCurrencyParams struct {
-	Id           int64  `json:"id"`
 	Name         string `json:"name"`
 	Abbreviation string `json:"abbreviation"`
 	Magnitude    int    `json:"magnitude"`
 }
 
-func CreateCurrency(dao DAO, params CreateCurrencyParams) (*Currency, error) {
+func CreateCurrency(dao DAO, id int64, params CreateCurrencyParams) (*Currency, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateCurrency")
 	defer logRepoReturn(log)
 
@@ -24,7 +23,7 @@ func CreateCurrency(dao DAO, params CreateCurrencyParams) (*Currency, error) {
 		RETURNING *`
 
 	var createdCurrency Currency
-	err := dao.Get(&createdCurrency, SQL, params.Id, params.Name, params.Abbreviation, params.Magnitude)
+	err := dao.Get(&createdCurrency, SQL, id, params.Name, params.Abbreviation, params.Magnitude)
 	if err != nil {
 		log.WithError(err).Error()
 	}

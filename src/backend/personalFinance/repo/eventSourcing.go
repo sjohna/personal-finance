@@ -38,7 +38,7 @@ func CreateAction(dao DAO, actionOrigin string) (int64, error) {
 }
 
 // todo: enums or functions
-func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, params interface{}) error {
+func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, entityId int64, params interface{}) error {
 	log := repoFunctionLogger(dao.Logger(), "CreateEvent")
 	defer logRepoReturn(log)
 
@@ -51,11 +51,11 @@ func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, p
 	jsonString := string(bytes)
 
 	SQL := `--sql
-	insert into event(event_type, entity_type, parameters, action_id)
-	values($1, $2, $3, $4);`
+	insert into event(event_type, entity_type, entity_id, parameters, action_id)
+	values($1, $2, $3, $4, $5);`
 
 	// todo: check result?
-	_, err = dao.Exec(SQL, eventType, entityType, jsonString, actionId)
+	_, err = dao.Exec(SQL, eventType, entityType, entityId, jsonString, actionId)
 	if err != nil {
 		log.WithError(err).Error()
 		return err
@@ -64,20 +64,26 @@ func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, p
 	return nil
 }
 
-func HandleCreateSingleEntityFromApiCall(dao DAO, eventType string, entityType string, params interface{}) error {
+func HandleCreateSingleEntityFromApiCall(dao DAO, eventType string, entityType string, params interface{}) (int64, error) {
 	log := dao.Logger()
 
-	action_id, err := CreateAction(dao, "api-call")
+	entityId, err := GetNextEntityId(dao)
+	if err != nil {
+		log.WithError(err).Error("Error getting next entity ID")
+		return 0, err
+	}
+
+	actionId, err := CreateAction(dao, "api-call")
 	if err != nil {
 		log.WithError(err).Error("Error creating action")
-		return err
+		return 0, err
 	}
 
-	err = CreateEvent(dao, action_id, eventType, entityType, params)
+	err = CreateEvent(dao, actionId, eventType, entityType, entityId, params)
 	if err != nil {
 		log.WithError(err).Error("Error creating event")
-		return err
+		return 0, err
 	}
 
-	return nil
+	return entityId, nil
 }

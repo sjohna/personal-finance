@@ -7,12 +7,11 @@ type Account struct {
 }
 
 type CreateAccountParams struct {
-	Id          int64  `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-func CreateAccount(dao DAO, params CreateAccountParams) (*Account, error) {
+func CreateAccount(dao DAO, id int64, params CreateAccountParams) (*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateAccount")
 	defer logRepoReturn(log)
 
@@ -22,7 +21,7 @@ func CreateAccount(dao DAO, params CreateAccountParams) (*Account, error) {
 		RETURNING *`
 
 	var createdAccount Account
-	err := dao.Get(&createdAccount, SQL, params.Id, params.Name, params.Description)
+	err := dao.Get(&createdAccount, SQL, id, params.Name, params.Description)
 	if err != nil {
 		log.WithError(err).Error()
 	}
@@ -30,7 +29,7 @@ func CreateAccount(dao DAO, params CreateAccountParams) (*Account, error) {
 	return &createdAccount, err
 }
 
-func GetAccount(dao DAO, accountID int64) (*Account, error) {
+func GetAccount(dao DAO, id int64) (*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "GetAccount")
 	defer logRepoReturn(log)
 
@@ -39,7 +38,7 @@ func GetAccount(dao DAO, accountID int64) (*Account, error) {
 		WHERE account.id = $1`
 
 	var account Account
-	err := dao.Get(&account, SQL, accountID)
+	err := dao.Get(&account, SQL, id)
 	if err != nil {
 		log.WithError(err).Error()
 	}

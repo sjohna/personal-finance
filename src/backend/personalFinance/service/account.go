@@ -18,23 +18,17 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, name string, desc
 	err := svc.Repo.SerializableTx(log, func(tx *repo.TxDAO) error {
 		txLog := tx.Logger()
 
-		id, err := repo.GetNextEntityId(tx)
-		if err != nil {
-			txLog.WithError(err).Error()
-			return err
-		}
-
 		params := repo.CreateAccountParams{
-			id,
 			name,
 			description,
 		}
 
-		if err = repo.HandleCreateSingleEntityFromApiCall(tx, "create", "account", params); err != nil {
+		id, err := repo.HandleCreateSingleEntityFromApiCall(tx, "create", "account", params)
+		if err != nil {
 			return err
 		}
 
-		account, err = repo.CreateAccount(tx, params)
+		account, err = repo.CreateAccount(tx, id, params)
 		if err != nil {
 			txLog.WithError(err).Error()
 			return err
