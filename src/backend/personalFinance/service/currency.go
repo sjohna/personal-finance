@@ -24,7 +24,7 @@ func (svc *CurrencyService) CreateCurrency(logger *logrus.Entry, name string, ab
 			magnitude,
 		}
 
-		id, err := repo.HandleCreateSingleEntityFromApiCall(tx, "create", "currency", params)
+		id, _, err := repo.HandleCreateSingleEntityFromApiCall(tx, "create", "currency", params)
 		if err != nil {
 			return err
 		}

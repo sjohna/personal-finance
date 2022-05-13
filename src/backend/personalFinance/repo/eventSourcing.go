@@ -1,6 +1,11 @@
 package repo
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+
+	"gopkg.in/guregu/null.v3"
+)
 
 func GetNextEntityId(dao DAO) (int64, error) {
 	log := repoFunctionLogger(dao.Logger(), "GetNextEntityId")
@@ -18,23 +23,30 @@ func GetNextEntityId(dao DAO) (int64, error) {
 	return nextId, err
 }
 
+type SimpleAction struct {
+	Id     int64       `db:"id"`
+	Time   time.Time   `db:"time"`
+	Origin string      `db:"origin"`
+	Notes  null.String `db:"notes"`
+}
+
 // todo: make origin an enum, or have different functions
-func CreateAction(dao DAO, actionOrigin string) (int64, error) {
+func CreateAction(dao DAO, actionOrigin string) (SimpleAction, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateAction")
 	defer logRepoReturn(log)
 
 	SQL := `--sql
 		insert into action(origin)
 		values($1)
-		returning id;`
+		returning *;`
 
-	var nextId int64
-	err := dao.Get(&nextId, SQL, actionOrigin)
+	var action SimpleAction
+	err := dao.Get(&action, SQL, actionOrigin)
 	if err != nil {
 		log.WithError(err).Error()
 	}
 
-	return nextId, err
+	return action, err
 }
 
 // todo: enums or functions
@@ -64,26 +76,26 @@ func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, e
 	return nil
 }
 
-func HandleCreateSingleEntityFromApiCall(dao DAO, eventType string, entityType string, params interface{}) (int64, error) {
+func HandleCreateSingleEntityFromApiCall(dao DAO, eventType string, entityType string, params interface{}) (int64, time.Time, error) {
 	log := dao.Logger()
 
 	entityId, err := GetNextEntityId(dao)
 	if err != nil {
 		log.WithError(err).Error("Error getting next entity ID")
-		return 0, err
+		return 0, time.Time{}, err
 	}
 
-	actionId, err := CreateAction(dao, "api-call")
+	action, err := CreateAction(dao, "api-call")
 	if err != nil {
 		log.WithError(err).Error("Error creating action")
-		return 0, err
+		return 0, time.Time{}, err
 	}
 
-	err = CreateEvent(dao, actionId, eventType, entityType, entityId, params)
+	err = CreateEvent(dao, action.Id, eventType, entityType, entityId, params)
 	if err != nil {
 		log.WithError(err).Error("Error creating event")
-		return 0, err
+		return 0, time.Time{}, err
 	}
 
-	return entityId, nil
+	return entityId, action.Time, nil
 }

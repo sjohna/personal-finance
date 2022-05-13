@@ -23,7 +23,7 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, name string, desc
 			description,
 		}
 
-		id, err := repo.HandleCreateSingleEntityFromApiCall(tx, "create", "account", params)
+		id, time, err := repo.HandleCreateSingleEntityFromApiCall(tx, "create", "account", params)
 		if err != nil {
 			return err
 		}
@@ -33,6 +33,9 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, name string, desc
 			txLog.WithError(err).Error()
 			return err
 		}
+
+		account.CreatedAt = time
+		account.UpdatedAt = time
 
 		return nil
 	})
