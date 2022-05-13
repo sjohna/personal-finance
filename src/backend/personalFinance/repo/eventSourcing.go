@@ -23,7 +23,7 @@ func GetNextEntityId(dao DAO) (int64, error) {
 	return nextId, err
 }
 
-type SimpleAction struct {
+type Action struct {
 	Id     int64       `db:"id"`
 	Time   time.Time   `db:"time"`
 	Origin string      `db:"origin"`
@@ -31,7 +31,7 @@ type SimpleAction struct {
 }
 
 // todo: make origin an enum, or have different functions
-func CreateAction(dao DAO, actionOrigin string) (SimpleAction, error) {
+func CreateAction(dao DAO, actionOrigin string) (Action, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateAction")
 	defer logRepoReturn(log)
 
@@ -40,7 +40,7 @@ func CreateAction(dao DAO, actionOrigin string) (SimpleAction, error) {
 		values($1)
 		returning *;`
 
-	var action SimpleAction
+	var action Action
 	err := dao.Get(&action, SQL, actionOrigin)
 	if err != nil {
 		log.WithError(err).Error()

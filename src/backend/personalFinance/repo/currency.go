@@ -1,10 +1,14 @@
 package repo
 
+import "time"
+
 type Currency struct {
-	Id           int64  `db:"id" json:"id"`
-	Name         string `db:"name" json:"name"`
-	Abbreviation string `db:"abbreviation" json:"abbreviation"`
-	Magnitude    int    `db:"magnitude" json:"magnitude"`
+	Id           int64     `db:"id" json:"id"`
+	Name         string    `db:"name" json:"name"`
+	Abbreviation string    `db:"abbreviation" json:"abbreviation"`
+	Magnitude    int       `db:"magnitude" json:"magnitude"`
+	CreatedAt    time.Time `db:"created_at" json:"createdAt"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 type CreateCurrencyParams struct {
