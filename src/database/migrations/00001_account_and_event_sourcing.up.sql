@@ -27,6 +27,9 @@ create table event (
   action_id int references action not null
 );
 
+create unique index single_create on event (entity_id) where (event_type = 'create');
+create unique index single_delete on event (entity_id) where (event_type = 'delete');
+
 create table entity_id (
 	entity_type text primary key,
 	id bigint not null
