@@ -1,6 +1,10 @@
 package repo
 
-import "time"
+import (
+	"time"
+
+	sq "github.com/elgris/sqrl"
+)
 
 type Account struct {
 	Id          int64     `db:"id" json:"id"`
@@ -15,14 +19,30 @@ type CreateAccountParams struct {
 	Description string `json:"description"`
 }
 
+func accountSelect() *sq.SelectBuilder {
+	return sq.Select("account.*", "create_action.time as created_at", "update_action.time as updated_at").
+		From("account").
+		Join("event create_event on create_event.entity_id = account.id and create_event.event_type = 'create'").
+		Join("action create_action on create_event.action_id = create_action.id").
+		JoinClause(`join lateral
+							(
+								select action.time 
+								from event
+								join action on event.action_id = action.id
+								where event.entity_id = account.id
+								order by time desc
+								limit 1
+							) update_action on true`)
+}
+
 func CreateAccount(dao DAO, id int64, params CreateAccountParams) (*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateAccount")
 	defer logRepoReturn(log)
 
 	SQL := `--sql
-		INSERT INTO account (id, name, description)
-		VALUES ($1, $2, $3)
-		RETURNING *`
+		insert into account (id, name, description)
+		values ($1, $2, $3)
+		returning *`
 
 	var createdAccount Account
 	err := dao.Get(&createdAccount, SQL, id, params.Name, params.Description)
@@ -37,26 +57,13 @@ func GetAccount(dao DAO, id int64) (*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "GetAccount")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
-		select account.*,
-	         create_action.time as created_at,
-					 update_action.time as updated_at
-		from account
-		join event create_event on create_event.entity_id = account.id and create_event.event_type = 'create'
-		join action create_action on create_event.action_id = create_action.id
-		join lateral
-		(
-		  select action.time 
-			from event
-			join action on event.action_id = action.id
-			where event.entity_id = account.id
-			order by time desc
-			limit 1
-		) update_action on true
-		where account.id = $1`
+	SQL, _, err := accountSelect().Where("account.id = $1").ToSql()
+	if err != nil {
+		log.WithError(err).Fatal("SQL error initializing query")
+	}
 
 	var account Account
-	err := dao.Get(&account, SQL, id)
+	err = dao.Get(&account, SQL, id)
 	if err != nil {
 		log.WithError(err).Error()
 	}
@@ -69,25 +76,13 @@ func GetAccounts(dao DAO) ([]*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "GetAccounts")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
-		select account.*,
-	         create_action.time as created_at,
-					 update_action.time as updated_at
-		from account
-		join event create_event on create_event.entity_id = account.id and create_event.event_type = 'create'
-		join action create_action on create_event.action_id = create_action.id
-		join lateral
-		(
-		  select action.time 
-			from event
-			join action on event.action_id = action.id
-			where event.entity_id = account.id
-			order by time desc
-			limit 1
-		) update_action on true`
+	SQL, _, err := accountSelect().ToSql()
+	if err != nil {
+		log.WithError(err).Fatal("SQL error initializing query")
+	}
 
 	accounts := make([]*Account, 0)
-	err := dao.Select(&accounts, SQL)
+	err = dao.Select(&accounts, SQL)
 	if err != nil {
 		log.WithError(err).Error()
 	}
