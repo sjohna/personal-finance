@@ -47,3 +47,32 @@ func (svc *CurrencyService) CreateCurrency(logger *logrus.Entry, name string, ab
 
 	return currency, nil
 }
+
+func (svc *CurrencyService) GetCurrency(logger *logrus.Entry, accountID int64) (*repo.Currency, error) {
+	log := serviceFunctionLogger(logger, "GetCurrency")
+	defer logServiceReturn(log)
+
+	dao := svc.Repo.NonTx(log)
+
+	currency, err := repo.GetCurrency(dao, accountID)
+	if err != nil {
+		log.WithError(err).Error()
+	}
+
+	return currency, err
+}
+
+// TODO: pagination
+func (svc *CurrencyService) GetCurrencies(logger *logrus.Entry) ([]*repo.Currency, error) {
+	log := serviceFunctionLogger(logger, "GetCurrencies")
+	defer logServiceReturn(log)
+
+	dao := svc.Repo.NonTx(log)
+
+	currencies, err := repo.GetCurrencies(dao)
+	if err != nil {
+		log.WithError(err).Error()
+	}
+
+	return currencies, err
+}
