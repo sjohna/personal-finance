@@ -58,7 +58,31 @@ func (svc *AccountService) GetAccount(logger *logrus.Entry, accountId int64) (*r
 	account, err := repo.GetAccount(dao, accountId)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
+
+	return account, err
+}
+
+func (svc *AccountService) GetAccountWithDebitsAndCredits(logger *logrus.Entry, accountId int64) (*repo.Account, error) {
+	log := serviceFunctionLogger(logger, "GetAccountWithDebitsAndCredits")
+	defer logServiceReturn(log)
+
+	dao := svc.Repo.NonTx(log)
+
+	account, err := repo.GetAccount(dao, accountId)
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, err
+	}
+
+	debitsAndCredits, err := repo.GetDebitsAndCreditsForAccount(dao, accountId)
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, err
+	}
+
+	account.DebitsAndCredits = debitsAndCredits
 
 	return account, err
 }
@@ -73,6 +97,7 @@ func (svc *AccountService) GetAccounts(logger *logrus.Entry) ([]*repo.Account, e
 	accounts, err := repo.GetAccounts(dao)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return accounts, err

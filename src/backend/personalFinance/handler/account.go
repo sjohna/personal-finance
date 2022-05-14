@@ -12,6 +12,7 @@ import (
 func (handler *AccountHandler) ConfigureRoutes(base *chi.Mux) {
 	base.Post("/account", handler.CreateAccount)
 	base.Get("/account/{accountID}", handler.GetAccount)
+	base.Get("/account/{accountID}/withdebitsandcredits", handler.GetAccountWithDebitsAndCredits)
 	base.Get("/account", handler.GetAccounts)
 	base.Post("/account/{accountID}/debit", handler.CreateDebit)
 	base.Post("/account/{accountID}/credit", handler.CreateCredit)
@@ -71,6 +72,28 @@ func (handler *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request
 	}
 
 	account, err := handler.Service.GetAccount(log, accountID)
+	if err != nil {
+		respondInternalServerError(log, w, err)
+		return
+	}
+
+	respondJSON(log, w, account)
+}
+
+func (handler *AccountHandler) GetAccountWithDebitsAndCredits(w http.ResponseWriter, r *http.Request) {
+	log := handlerLogger(r, "GetAccountWithDebitsAndCredits")
+	defer logHandlerReturn(log)
+
+	accountIDString := chi.URLParam(r, "accountID")
+	log.WithField("accountID", accountIDString).Info("Params")
+
+	accountID, err := strconv.ParseInt(accountIDString, 10, 64)
+	if err != nil {
+		respondInternalServerError(log, w, err)
+		return
+	}
+
+	account, err := handler.Service.GetAccountWithDebitsAndCredits(log, accountID)
 	if err != nil {
 		respondInternalServerError(log, w, err)
 		return

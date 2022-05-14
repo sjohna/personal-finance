@@ -7,11 +7,12 @@ import (
 )
 
 type Account struct {
-	Id          int64     `db:"id" json:"id"`
-	Name        string    `db:"name" json:"name"`
-	Description string    `db:"description" json:"description"`
-	CreatedAt   time.Time `db:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time `db:"updated_at" json:"updatedAt"`
+	Id               int64         `db:"id" json:"id"`
+	Name             string        `db:"name" json:"name"`
+	Description      string        `db:"description" json:"description"`
+	CreatedAt        time.Time     `db:"created_at" json:"createdAt"`
+	UpdatedAt        time.Time     `db:"updated_at" json:"updatedAt"`
+	DebitsAndCredits []DebitCredit `json:"debitsAndCredits,omitempty"`
 }
 
 type CreateAccountParams struct {
@@ -33,6 +34,8 @@ type DebitCredit struct {
 	CurrencyId int64           `db:"currency_id" json:"currencyId"`
 	Time       time.Time       `db:"time" json:"time"`
 	AccountId  int64           `db:"account_id" json:"accountId"`
+	CreatedAt  time.Time       `db:"created_at" json:"createdAt"`
+	UpdatedAt  time.Time       `db:"updated_at" json:"updatedAt"`
 }
 
 type CreateDebitCreditParams struct {
@@ -58,6 +61,22 @@ func accountSelect() *sq.SelectBuilder {
 							) update_action on true`)
 }
 
+func debitCreditSelect() *sq.SelectBuilder {
+	return sq.Select("debits_and_credits.*", "create_action.time as created_at", "update_action.time as updated_at").
+		From("debits_and_credits").
+		Join("event create_event on create_event.entity_id = debits_and_credits.id and create_event.event_type = 'create'").
+		Join("action create_action on create_event.action_id = create_action.id").
+		JoinClause(`join lateral
+							(
+								select action.time 
+								from event
+								join action on event.action_id = action.id
+								where event.entity_id = debits_and_credits.id
+								order by time desc
+								limit 1
+							) update_action on true`)
+}
+
 func CreateAccount(dao DAO, id int64, params CreateAccountParams) (*Account, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateAccount")
 	defer logRepoReturn(log)
@@ -71,6 +90,7 @@ func CreateAccount(dao DAO, id int64, params CreateAccountParams) (*Account, err
 	err := dao.Get(&createdAccount, SQL, id, params.Name, params.Description)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return &createdAccount, err
@@ -83,12 +103,14 @@ func GetAccount(dao DAO, id int64) (*Account, error) {
 	SQL, _, err := accountSelect().Where("account.id = $1").ToSql()
 	if err != nil {
 		log.WithError(err).Fatal("SQL error initializing query")
+		return nil, err
 	}
 
 	var account Account
 	err = dao.Get(&account, SQL, id)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return &account, err
@@ -102,12 +124,14 @@ func GetAccounts(dao DAO) ([]*Account, error) {
 	SQL, _, err := accountSelect().ToSql()
 	if err != nil {
 		log.WithError(err).Fatal("SQL error initializing query")
+		return nil, err
 	}
 
 	accounts := make([]*Account, 0)
 	err = dao.Select(&accounts, SQL)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return accounts, err
@@ -126,6 +150,7 @@ func CreateDebit(dao DAO, id int64, params CreateDebitCreditParams) (*DebitCredi
 	err := dao.Get(&createdDebit, SQL, id, params.Amount, params.CurrencyId, params.Time, params.AccountId)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return &createdDebit, err
@@ -144,7 +169,27 @@ func CreateCredit(dao DAO, id int64, params CreateDebitCreditParams) (*DebitCred
 	err := dao.Get(&createdCredit, SQL, id, params.Amount, params.CurrencyId, params.Time, params.AccountId)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return &createdCredit, err
+}
+
+func GetDebitsAndCreditsForAccount(dao DAO, accountId int64) ([]DebitCredit, error) {
+	log := repoFunctionLogger(dao.Logger(), "GetDebitsAndCreditsForAccount")
+	defer logRepoReturn(log)
+
+	SQL, _, err := debitCreditSelect().Where("account_id = $1").OrderBy("time asc").ToSql()
+	if err != nil {
+		log.WithError(err).Fatal("SQL error initializing query")
+	}
+
+	debitsAndCredits := make([]DebitCredit, 0)
+	err = dao.Select(&debitsAndCredits, SQL, accountId)
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, err
+	}
+
+	return debitsAndCredits, err
 }

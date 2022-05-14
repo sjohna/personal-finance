@@ -57,6 +57,7 @@ func (svc *CurrencyService) GetCurrency(logger *logrus.Entry, accountID int64) (
 	currency, err := repo.GetCurrency(dao, accountID)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return currency, err
@@ -72,6 +73,7 @@ func (svc *CurrencyService) GetCurrencies(logger *logrus.Entry) ([]*repo.Currenc
 	currencies, err := repo.GetCurrencies(dao)
 	if err != nil {
 		log.WithError(err).Error()
+		return nil, err
 	}
 
 	return currencies, err
