@@ -19,6 +19,29 @@ type CreateAccountParams struct {
 	Description string `json:"description"`
 }
 
+type DebitCreditType int64
+
+const (
+	Debit  DebitCreditType = 0
+	Credit DebitCreditType = 1
+)
+
+type DebitCredit struct {
+	Type       DebitCreditType `db:"type" json:"type"`
+	Id         int64           `db:"id" json:"id"`
+	Amount     int64           `db:"amount" json:"amount"`
+	CurrencyId int64           `db:"currency_id" json:"currencyId"`
+	Time       time.Time       `db:"time" json:"time"`
+	AccountId  int64           `db:"account_id" json:"accountId"`
+}
+
+type CreateDebitCreditParams struct {
+	Amount     int64     `json:"amount"`
+	CurrencyId int64     `json:"currencyId"`
+	Time       time.Time `json:"time"`
+	AccountId  int64     `json:"accountId"`
+}
+
 func accountSelect() *sq.SelectBuilder {
 	return sq.Select("account.*", "create_action.time as created_at", "update_action.time as updated_at").
 		From("account").
@@ -88,4 +111,40 @@ func GetAccounts(dao DAO) ([]*Account, error) {
 	}
 
 	return accounts, err
+}
+
+func CreateDebit(dao DAO, id int64, params CreateDebitCreditParams) (*DebitCredit, error) {
+	log := repoFunctionLogger(dao.Logger(), "CreateDebit")
+	defer logRepoReturn(log)
+
+	SQL := `--sql
+		insert into debit (id, amount, currency_id, time, account_id)
+		values ($1, $2, $3, $4, $5)
+		returning *, 0 as type`
+
+	var createdDebit DebitCredit
+	err := dao.Get(&createdDebit, SQL, id, params.Amount, params.CurrencyId, params.Time, params.AccountId)
+	if err != nil {
+		log.WithError(err).Error()
+	}
+
+	return &createdDebit, err
+}
+
+func CreateCredit(dao DAO, id int64, params CreateDebitCreditParams) (*DebitCredit, error) {
+	log := repoFunctionLogger(dao.Logger(), "CreateCredit")
+	defer logRepoReturn(log)
+
+	SQL := `--sql
+		insert into credit (id, amount, currency_id, time, account_id)
+		values ($1, $2, $3, $4, $5)
+		returning *, 1 as type`
+
+	var createdCredit DebitCredit
+	err := dao.Get(&createdCredit, SQL, id, params.Amount, params.CurrencyId, params.Time, params.AccountId)
+	if err != nil {
+		log.WithError(err).Error()
+	}
+
+	return &createdCredit, err
 }

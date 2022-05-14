@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"github.com/sjohna/personal-finance/repo"
 )
@@ -47,13 +49,13 @@ func (svc *AccountService) CreateAccount(logger *logrus.Entry, name string, desc
 	return account, nil
 }
 
-func (svc *AccountService) GetAccount(logger *logrus.Entry, accountID int64) (*repo.Account, error) {
+func (svc *AccountService) GetAccount(logger *logrus.Entry, accountId int64) (*repo.Account, error) {
 	log := serviceFunctionLogger(logger, "GetAccount")
 	defer logServiceReturn(log)
 
 	dao := svc.Repo.NonTx(log)
 
-	account, err := repo.GetAccount(dao, accountID)
+	account, err := repo.GetAccount(dao, accountId)
 	if err != nil {
 		log.WithError(err).Error()
 	}
@@ -74,4 +76,78 @@ func (svc *AccountService) GetAccounts(logger *logrus.Entry) ([]*repo.Account, e
 	}
 
 	return accounts, err
+}
+
+func (svc *AccountService) CreateDebit(logger *logrus.Entry, accountId int64, amount int64, currencyId int64, time time.Time) (*repo.DebitCredit, error) {
+	log := serviceFunctionLogger(logger, "CreateDebit")
+	defer logServiceReturn(log)
+
+	var debit *repo.DebitCredit
+
+	err := svc.Repo.SerializableTx(log, func(tx *repo.TxDAO) error {
+		txLog := tx.Logger()
+
+		params := repo.CreateDebitCreditParams{
+			amount,
+			currencyId,
+			time,
+			accountId,
+		}
+
+		id, _, err := repo.HandleCreateSingleEntityFromApiCall(tx, "create", "debit", params)
+		if err != nil {
+			return err
+		}
+
+		debit, err = repo.CreateDebit(tx, id, params)
+		if err != nil {
+			txLog.WithError(err).Error()
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return debit, nil
+}
+
+func (svc *AccountService) CreateCredit(logger *logrus.Entry, accountId int64, amount int64, currencyId int64, time time.Time) (*repo.DebitCredit, error) {
+	log := serviceFunctionLogger(logger, "CreateCredit")
+	defer logServiceReturn(log)
+
+	var debit *repo.DebitCredit
+
+	err := svc.Repo.SerializableTx(log, func(tx *repo.TxDAO) error {
+		txLog := tx.Logger()
+
+		params := repo.CreateDebitCreditParams{
+			amount,
+			currencyId,
+			time,
+			accountId,
+		}
+
+		id, _, err := repo.HandleCreateSingleEntityFromApiCall(tx, "create", "credit", params)
+		if err != nil {
+			return err
+		}
+
+		debit, err = repo.CreateCredit(tx, id, params)
+		if err != nil {
+			txLog.WithError(err).Error()
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return debit, nil
 }
