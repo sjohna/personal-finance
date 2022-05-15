@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/sjohna/personal-finance/handler"
 	"github.com/sjohna/personal-finance/repo"
@@ -53,6 +54,17 @@ func main() {
 	// init chi
 
 	r := chi.NewRouter()
+
+	// cors
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
 	r.Use(handler.LogRequestContext)
 	accountHandler.ConfigureRoutes(r)
 	currencyHandler.ConfigureRoutes(r)

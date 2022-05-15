@@ -12,6 +12,8 @@ require (
 
 require gopkg.in/guregu/null.v3 v3.5.0
 
+require github.com/go-chi/cors v1.2.1
+
 require (
 	github.com/BurntSushi/toml v1.0.0 // indirect
 	github.com/elgris/sqrl v0.0.0-20210727210741-7e0198b30236
