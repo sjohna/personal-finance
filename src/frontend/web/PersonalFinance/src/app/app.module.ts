@@ -4,10 +4,14 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { AccountsComponent } from './components/accounts/accounts.component';
+import { CurrenciesComponent } from './components/currencies/currencies.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    AccountsComponent,
+    CurrenciesComponent
   ],
   imports: [
     BrowserModule,

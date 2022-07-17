@@ -1,0 +1,7 @@
+<p>currencies works!</p>
+<div style="padding-bottom: 8px;" *ngFor="let currency of currencies$ | async">
+  <div>ID: {{currency.id}}</div>
+  <div>Name: {{currency.name}}</div>
+  <div>Abbreviation: {{currency.abbreviation}}</div>
+  <div>Created At: {{currency.createdAt}}</div>
+</div>
