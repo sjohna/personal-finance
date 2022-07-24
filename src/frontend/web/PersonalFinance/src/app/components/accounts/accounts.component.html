@@ -1,6 +1,11 @@
 <h1>Accounts</h1>
-<div *ngFor="let account of accounts$ | async">
-  <div>{{account.name}} - {{account.description}}</div>
-  <div>Created: {{account.createdAt}}</div>
-  <div>Updated: {{account.updatedAt}}</div>
+<div class="px-2 grid grid-cols-3 font-semibold text-lg">
+  <div class="p-1">Account Name</div>
+  <div class="p-1">Account Description</div>
+  <div class="p-1">Created Time</div>
+</div>
+<div class="px-2 grid grid-cols-3 " *ngFor="let account of accounts$ | async">
+  <div class="p-1">{{account.name}}</div>
+  <div class="p-1">{{account.description}}</div>
+  <div class="p-1">{{account.createdAt}}</div>
 </div>
