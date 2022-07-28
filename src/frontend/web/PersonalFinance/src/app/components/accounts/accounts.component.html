@@ -1,10 +1,10 @@
-<div class="px-2 grid grid-cols-3 font-semibold text-lg">
+<div class="px-2 grid grid-cols-3 font-semibold text-lg max-w-5xl bg-gray-400">
   <div class="p-1">Account Name</div>
   <div class="p-1">Account Description</div>
-  <div class="p-1">Created Time</div>
+  <div class="p-1">Created At</div>
 </div>
-<div class="px-2 grid grid-cols-3 " *ngFor="let account of accounts$ | async">
+<div class="px-2 grid grid-cols-3 max-w-5xl" *ngFor="let account of accounts$ | async">
   <div class="p-1">{{account.name}}</div>
   <div class="p-1">{{account.description}}</div>
-  <div class="p-1">{{account.createdAt}}</div>
+  <div class="p-1">{{account.createdAt | formatDate}}</div>
 </div>

@@ -8,12 +8,14 @@ import { AccountsComponent } from './components/accounts/accounts.component';
 import { CurrenciesComponent } from './components/currencies/currencies.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatTabsModule } from '@angular/material/tabs';
+import { FormatDatePipe } from './pipes/format-date.pipe';
 
 @NgModule({
   declarations: [
     AppComponent,
     AccountsComponent,
-    CurrenciesComponent
+    CurrenciesComponent,
+    FormatDatePipe
   ],
   imports: [
     BrowserModule,
