@@ -1,2 +1,15 @@
-This is the main component.
+<nav mat-tab-nav-bar>
+  <a mat-tab-link
+     [routerLink]="'accounts'"
+     routerLinkActive #accountsActive="routerLinkActive"
+     [active]="accountsActive.isActive">
+    Accounts
+  </a>
+  <a mat-tab-link
+     [routerLink]="'currencies'"
+     routerLinkActive #currenciesActive="routerLinkActive"
+     [active]="currenciesActive.isActive">
+    Currencies
+  </a>
+</nav>
 <router-outlet></router-outlet>
