@@ -12,5 +12,4 @@ export class FormatDatePipe implements PipeTransform {
       return new Date(date).toLocaleString();
     }
   }
-
 }

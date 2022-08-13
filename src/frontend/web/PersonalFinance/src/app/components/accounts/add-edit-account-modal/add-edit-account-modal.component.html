@@ -1,0 +1,21 @@
+<h1 mat-dialog-title>New Account</h1>
+<mat-dialog-content>
+  <form [formGroup]="accountForm">
+    <div>
+      <mat-form-field appearance="fill">
+        <mat-label>Account Name</mat-label>
+        <input matNativeControl formControlName="name"/>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Account Description</mat-label>
+        <input matNativeControl formControlName="description"/>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-raised-button mat-dialog-close="" color="accent">Cancel</button>
+  <button mat-raised-button color="primary" (click)="createAccount()">Create</button>
+</mat-dialog-actions>

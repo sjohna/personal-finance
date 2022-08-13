@@ -53,5 +53,17 @@ export class AccountsService {
     }
   }
 
+  public async createAccount(name: string, description: string) {
+    try {
+      await firstValueFrom(this.http.post<Account>('http://localhost:3000/account', {
+        name,
+        description
+      }));
+      this.loadAccounts();
+    } catch {
+
+    }
+  }
+
 
 }
