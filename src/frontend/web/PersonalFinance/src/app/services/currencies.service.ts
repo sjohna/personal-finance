@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, firstValueFrom, shareReplay } from 'rxjs';
 import { LoadingStatus } from './types';
+import {Account} from "./accounts.service";
 
 export interface Currency {
   id: number;
@@ -33,6 +34,19 @@ export class CurrenciesService {
       this.loadingStatus$$.next(LoadingStatus.Loaded);
     } catch {
       this.loadingStatus$$.next(LoadingStatus.Error);
+    }
+  }
+
+  public async createCurrency(name: string, abbreviation: string, magnitude: number) {
+    try {
+      await firstValueFrom(this.http.post<Currency>('http://localhost:3000/currency', {
+        name,
+        abbreviation,
+        magnitude
+      }));
+      this.loadCurrencies();
+    } catch {
+
     }
   }
 }

@@ -1,0 +1,27 @@
+<h1 mat-dialog-title>New Currency</h1>
+<mat-dialog-content>
+  <form [formGroup]="currencyForm">
+    <div>
+      <mat-form-field appearance="fill">
+        <mat-label>Name</mat-label>
+        <input matNativeControl formControlName="name"/>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Abbreviation</mat-label>
+        <input matNativeControl formControlName="abbreviation"/>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Magnitude</mat-label>
+        <input matNativeControl type="number" formControlName="magnitude"/>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-raised-button mat-dialog-close="" color="accent">Cancel</button>
+  <button mat-raised-button color="primary" (click)="createCurrency()">Create</button>
+</mat-dialog-actions>

@@ -15,6 +15,7 @@ import { MatDialogModule } from "@angular/material/dialog";
 import {ReactiveFormsModule} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
+import { AddEditCurrencyModalComponent } from './components/currencies/add-edit-currency-modal/add-edit-currency-modal.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import {MatInputModule} from "@angular/material/input";
     AccountsComponent,
     CurrenciesComponent,
     FormatDatePipe,
-    AddEditAccountModalComponent
+    AddEditAccountModalComponent,
+    AddEditCurrencyModalComponent
   ],
   imports: [
     BrowserModule,
