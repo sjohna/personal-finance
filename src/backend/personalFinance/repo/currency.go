@@ -41,7 +41,8 @@ func CreateCurrency(dao DAO, id int64, params CreateCurrencyParams) (*Currency, 
 	log := repoFunctionLogger(dao.Logger(), "CreateCurrency")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
+	// language=SQL
+	SQL := `
 		INSERT INTO currency (id, name, abbreviation, magnitude)
 		VALUES ($1, $2, $3, $4)
 		RETURNING *`

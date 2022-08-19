@@ -81,7 +81,8 @@ func CreateAccount(dao DAO, id int64, params CreateAccountParams) (*Account, err
 	log := repoFunctionLogger(dao.Logger(), "CreateAccount")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
+	// language=SQL
+	SQL := `
 		insert into account (id, name, description)
 		values ($1, $2, $3)
 		returning *`
@@ -141,7 +142,8 @@ func CreateDebit(dao DAO, id int64, params CreateDebitCreditParams) (*DebitCredi
 	log := repoFunctionLogger(dao.Logger(), "CreateDebit")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
+	// language=SQL
+	SQL := `
 		insert into debit (id, amount, currency_id, time, account_id)
 		values ($1, $2, $3, $4, $5)
 		returning *, 0 as type`
@@ -160,7 +162,8 @@ func CreateCredit(dao DAO, id int64, params CreateDebitCreditParams) (*DebitCred
 	log := repoFunctionLogger(dao.Logger(), "CreateCredit")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
+	// language=SQL
+	SQL := `
 		insert into credit (id, amount, currency_id, time, account_id)
 		values ($1, $2, $3, $4, $5)
 		returning *, 1 as type`

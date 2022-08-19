@@ -11,7 +11,8 @@ func GetNextEntityId(dao DAO) (int64, error) {
 	log := repoFunctionLogger(dao.Logger(), "GetNextEntityId")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
+	// language=SQL
+	SQL := `
 		select nextEntityId();`
 
 	var nextId int64
@@ -35,7 +36,8 @@ func CreateAction(dao DAO, actionOrigin string) (Action, error) {
 	log := repoFunctionLogger(dao.Logger(), "CreateAction")
 	defer logRepoReturn(log)
 
-	SQL := `--sql
+	// language=SQL
+	SQL := `
 		insert into action(origin)
 		values($1)
 		returning *;`
@@ -62,6 +64,7 @@ func CreateEvent(dao DAO, actionId int64, eventType string, entityType string, e
 
 	jsonString := string(bytes)
 
+	// language=SQL
 	SQL := `--sql
 	insert into event(event_type, entity_type, entity_id, parameters, action_id)
 	values($1, $2, $3, $4, $5);`
