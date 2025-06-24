@@ -1,4 +1,10 @@
+#![allow(dead_code)]    // TODO: disable once project is more fleshed out
+
 mod repo;
+mod common;
+
+use tracing::{event, span, Level};
+use common::Result;
 
 #[derive(Debug)]
 struct Person {
@@ -7,10 +13,26 @@ struct Person {
     data: Option<Vec<u8>>,
 }
 
-fn main() -> repo::Result<()> {
+fn main() -> Result<()> {
+    // TODO: log to file
+    let _stdout_subscriber = tracing_subscriber::fmt::init();
+
+    tracing::info!("Look ma, I'm tracing!");
+
     let mut conn = repo::connect()?;
 
-    dbg!(repo::init(&mut conn));
+    let span = span!(Level::INFO, "Application is running");
+    let _guard = span.enter();
+
+    event!(Level::INFO, "Connected to database.");
+
+    dbg!(repo::init(&mut conn))?;
+
+    event!(Level::INFO, "Initialized database.");
+
+    //drop(guard);
+
+    println!("{:?}", repo::new_uuid());
 
     Ok(())
 }

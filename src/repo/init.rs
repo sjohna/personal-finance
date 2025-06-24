@@ -1,21 +1,22 @@
 use std::error::Error;
 use rusqlite;
-use rusqlite::{params, Connection, Params, Row};
-use crate::repo::version_1;
+use rusqlite::{params, Connection, Row};
+use crate::repo::{select_zero_or_one, version_1};
+
+use crate::common::Result;
 
 const CURRENT_VERSION: u32 = 1;
-
-// TODO: reorganize all of this
-pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Clone, Default)]
 pub struct Version {
     version: u32,
-    time_applied: String,   // TODO: look at chrono for time types?
+    time_applied: chrono::DateTime<chrono::Utc>,
 }
 
-impl FromRow for Version {
-    fn from_row(row: &Row) -> Result<Version> {
+impl TryFrom<&Row<'_>> for Version {
+    type Error = Box<dyn Error>;
+
+    fn try_from(row: &Row) -> Result<Version> {
         Ok(Version {
             version: row.get(0)?,
             time_applied: row.get(1)?,
@@ -82,66 +83,5 @@ fn create_version_table(conn: &Connection) -> Result<()> {
     conn.execute(create_query, params![])?;
 
     Ok(())
-}
-
-// functions needed:
-// select_one_or_more
-// select_zero_or_more
-// select_one
-// select_zero_or_one
-//
-// for both primitives (T: FromSql) and structures (T: FromRow)
-
-pub fn select_zero_or_one<T: FromRow, P: Params>(conn: &rusqlite::Connection, query: &str, params: P) -> Result<Option<Box<T>>> {
-    let mut statement = conn.prepare(query)?;
-    let mut returned = statement.query_and_then(params, T::from_row)?;  // Q: what's the difference between this and query_map?
-
-    let row = returned.next();
-
-    if row.is_none() {
-        return Ok(None);
-    }
-
-    let ret = Box::new(row.unwrap()?);
-
-    match returned.next() {
-        None => Ok(Some(ret)),
-        Some(_) => Err(Box::from("expected zero or one rows")),
-    }
-}
-
-pub fn select_one<T: FromRow, P: Params>(conn: &rusqlite::Connection, query: &str, params: P) -> Result<Box<T>> {
-    let returned = select_zero_or_one(conn, query, params)?;
-
-    match returned {
-        Some(ret) => Ok(ret),
-        None => Err(Box::from("no rows returned")),
-    }
-}
-
-pub fn select_one_or_more<T: FromRow, P: Params>(conn: &rusqlite::Connection, query: &str, params: P) -> Result<Vec<T>> {
-    let returned = select_zero_or_more(conn, query, params)?;
-    if returned.len() == 0 {
-        return Err(Box::from("expected at least one row"));   // TODO: standardize these errors
-    }
-
-    Ok(returned)
-}
-
-pub fn select_zero_or_more<T: FromRow, P: Params>(conn: &rusqlite::Connection, query: &str, params: P) -> Result<Vec<T>> {
-    let mut statement = conn.prepare(query)?;
-    let returned = statement.query_and_then(params, T::from_row)?;  // Q: what's the difference between this and query_map?
-
-    let mut ret = Vec::new();
-    for t in returned {
-        ret.push(t?);
-    }
-
-    Ok(ret)
-}
-
-
-pub trait FromRow {
-    fn from_row(row: &rusqlite::Row) -> Result<Self> where Self: Sized; // TODO: boxed references?
 }
 
